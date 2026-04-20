@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity 0.8.28;
+
+import { IMapleStrategyManagerInitializer } from "./interfaces/IMapleStrategyManagerInitializer.sol";
+
+import { MapleStrategyManagerStorage } from "./MapleStrategyManagerStorage.sol";
+
+contract MapleStrategyManagerInitializer is IMapleStrategyManagerInitializer, MapleStrategyManagerStorage {
+
+    function _initialize(IMapleStrategyManagerInitializer.Parameters memory params_) internal {
+        strategy = params_.strategy;
+
+        emit Initialized(params_);
+    }
+
+    fallback() external {
+        _initialize(abi.decode(msg.data, (Parameters)));
+    }
+
+}

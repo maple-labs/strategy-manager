@@ -18,16 +18,6 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /*** Modifiers                                                                                                                      ***/
     /**************************************************************************************************************************************/
 
-    modifier nonReentrant() {
-        require(!_locked, "MSM:LOCKED");
-
-        _locked = true;
-
-        _;
-
-        _locked = false;
-    }
-
     modifier onlyFactory() {
         require(msg.sender == _factory(), "MSM:NOT_FACTORY");
 

@@ -9,6 +9,8 @@ interface IGlobalsLike {
 
     function securityAdmin() external view returns (address);
 
+    function strategyDelegateOf(address strategyManager) external view returns (address);
+
 }
 
 interface IProxyFactoryLike {

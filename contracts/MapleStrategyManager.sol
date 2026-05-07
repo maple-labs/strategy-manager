@@ -18,13 +18,31 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /*** Modifiers                                                                                                                      ***/
     /**************************************************************************************************************************************/
 
+    modifier nonReentrant() {
+        require(_locked == 1, "MSM:LOCKED");
+
+        _locked = 2;
+
+        _;
+
+        _locked = 1;
+    }
+
     modifier onlyFactory() {
         require(msg.sender == _factory(), "MSM:NOT_FACTORY");
 
         _;
     }
 
-    modifier whenNotPaused() {
+    // TODO: Determine where the strategy delegate address will be retrieved from.
+    modifier onlyStrategyDelegate() {
+        require(msg.sender == IGlobalsLike(globals()).strategyDelegateOf(address(this)), "MSM:NOT_STRATEGY_DELEGATE");
+
+        _;
+    }
+
+    // TODO: Should this be renamed to `whenNotPaused`?
+    modifier whenProtocolNotPaused() {
         require(!IGlobalsLike(globals()).isFunctionPaused(msg.sig), "MSM:PAUSED");
 
         _;
@@ -34,15 +52,15 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /*** Proxy Functions                                                                                                                ***/
     /**************************************************************************************************************************************/
 
-    function migrate(address migrator_, bytes calldata arguments_) external override whenNotPaused onlyFactory {
+    function migrate(address migrator_, bytes calldata arguments_) external override whenProtocolNotPaused onlyFactory {
         require(_migrate(migrator_, arguments_), "MSM:M:FAILED");
     }
 
-    function setImplementation(address implementation_) external override whenNotPaused onlyFactory {
+    function setImplementation(address implementation_) external override whenProtocolNotPaused onlyFactory {
         _setImplementation(implementation_);
     }
 
-    function upgrade(uint256 version_, bytes calldata arguments_) external override whenNotPaused {
+    function upgrade(uint256 version_, bytes calldata arguments_) external override whenProtocolNotPaused {
         require(msg.sender == securityAdmin(), "MSM:U:NOT_AUTHORIZED");
 
         IProxyFactoryLike(_factory()).upgradeInstance(version_, arguments_);

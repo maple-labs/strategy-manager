@@ -10,6 +10,8 @@ contract MapleStrategyManagerInitializer is IMapleStrategyManagerInitializer, Ma
     function _initialize(IMapleStrategyManagerInitializer.Parameters memory params_) internal {
         strategy = params_.strategy;
 
+        _locked = 1;
+
         emit Initialized(params_);
     }
 

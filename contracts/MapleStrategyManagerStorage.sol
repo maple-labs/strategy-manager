@@ -5,7 +5,7 @@ import { IMapleStrategyManagerStorage } from "./interfaces/IMapleStrategyManager
 
 contract MapleStrategyManagerStorage is IMapleStrategyManagerStorage {
 
-    bool transient internal _locked;
+    uint256 internal _locked;
 
     address public override strategy;
 

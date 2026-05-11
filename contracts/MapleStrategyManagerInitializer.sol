@@ -7,8 +7,9 @@ import { MapleStrategyManagerStorage } from "./MapleStrategyManagerStorage.sol";
 
 contract MapleStrategyManagerInitializer is IMapleStrategyManagerInitializer, MapleStrategyManagerStorage {
 
+    // TODO: check whether further parameters such as fee or strategy metadata should be passed
     function _initialize(IMapleStrategyManagerInitializer.Parameters memory params_) internal {
-        strategy = params_.strategy;
+        underlyingStrategy = params_.underlyingStrategy;
 
         _locked = 1;
 

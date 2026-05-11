@@ -8,8 +8,8 @@ interface IMapleStrategyManagerStorage {
 
     /**
      *  @dev    Returns the address of the underlying strategy contract.
-     *  @return strategy Address of the underlying strategy.
+     *  @return underlyingStrategy Address of the underlying strategy.
      */
-    function strategy() external view returns (address strategy);
+    function underlyingStrategy() external view returns (address underlyingStrategy);
 
 }

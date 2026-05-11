@@ -7,15 +7,9 @@ import { IMapleStrategyManagerInitializer } from "../../contracts/interfaces/IMa
 
 import { MapleStrategyManagerFactory } from "../../contracts/MapleStrategyManagerFactory.sol";
 
-import {
-    MapleStrategyManagerHarness,
-    MapleStrategyManagerInitializerHarness
-} from "./Harnesses.sol";
+import { MapleStrategyManagerHarness, MapleStrategyManagerInitializerHarness } from "./Harnesses.sol";
 
-import {
-    MockGlobals,
-    MockStrategy
-} from "./Mocks.sol";
+import { MockGlobals, MockStrategy } from "./Mocks.sol";
 
 contract TestBase is Test {
 
@@ -30,8 +24,8 @@ contract TestBase is Test {
 
     IMapleStrategyManagerInitializer.Parameters params;
 
-    MockGlobals  globals  = new MockGlobals();
-    MockStrategy strategy = new MockStrategy();
+    MockGlobals  globals            = new MockGlobals();
+    MockStrategy underlyingStrategy = new MockStrategy();
 
     MapleStrategyManagerFactory factory;
     MapleStrategyManagerHarness manager;
@@ -51,7 +45,7 @@ contract TestBase is Test {
         vm.stopPrank();
 
         params = IMapleStrategyManagerInitializer.Parameters({
-            strategy: address(strategy)
+            underlyingStrategy: address(underlyingStrategy)
         });
 
         vm.prank(deployer);

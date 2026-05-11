@@ -39,7 +39,7 @@ contract MockGlobals {
 contract MockMigrator is MapleStrategyManagerStorage {
 
     fallback() external {
-        strategy = abi.decode(msg.data, (address));
+        underlyingStrategy = abi.decode(msg.data, (address));
     }
 
 }

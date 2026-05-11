@@ -8,10 +8,10 @@ interface IMapleStrategyManagerInitializer {
 
     /**
      *  @dev   Parameters required to initialize a strategy manager.
-     *  @param strategy Address of the underlying strategy.
+     *  @param underlyingStrategy Address of the underlying strategy.
      */
     struct Parameters {
-        address strategy;
+        address underlyingStrategy;
     }
 
     /**

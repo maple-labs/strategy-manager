@@ -61,8 +61,8 @@ contract UpgradeTests is TestBase {
     }
 
     function test_upgrade_success() external {
-        assertEq(manager.implementation(), implementation);
-        assertEq(manager.strategy(),       params.strategy);
+        assertEq(manager.implementation(),     implementation);
+        assertEq(manager.underlyingStrategy(), address(underlyingStrategy));
 
         vm.expectEmit();
         emit IMapleProxied.Upgraded(200, arguments);
@@ -70,8 +70,8 @@ contract UpgradeTests is TestBase {
         vm.prank(securityAdmin);
         manager.upgrade(200, arguments);
 
-        assertEq(manager.implementation(), newImplementation);
-        assertEq(manager.strategy(),       address(1337));
+        assertEq(manager.implementation(),     newImplementation);
+        assertEq(manager.underlyingStrategy(), address(1337));
     }
 
 }

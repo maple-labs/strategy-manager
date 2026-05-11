@@ -5,8 +5,8 @@ import { IMapleStrategyManagerStorage } from "./interfaces/IMapleStrategyManager
 
 contract MapleStrategyManagerStorage is IMapleStrategyManagerStorage {
 
-    uint256 internal _locked;
+    uint256 internal _locked;  // Used when checking for reentrancy.
 
-    address public override strategy;
+    address public override underlyingStrategy;
 
 }

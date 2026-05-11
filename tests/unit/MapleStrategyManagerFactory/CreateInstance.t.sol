@@ -26,6 +26,12 @@ contract CreateInstanceTests is TestBase {
         factory.createInstance(abi.encode(params), "");
     }
 
+    function test_createInstance_revert_malformedArguments() external {
+        vm.prank(deployer);
+        vm.expectRevert("MPF:CI:FAILED");
+        factory.createInstance("", "");
+    }
+
     function test_createInstance_success() external {
         bytes32 salt           = keccak256("salt");
         bytes memory arguments = abi.encode(params);
@@ -43,10 +49,11 @@ contract CreateInstanceTests is TestBase {
         vm.prank(deployer);
         manager = MapleStrategyManagerHarness(factory.createInstance(arguments, salt));
 
-        assertEq(address(manager),         expectedInstance);
-        assertEq(manager.factory(),        address(factory));
-        assertEq(manager.implementation(), implementation);
-        assertEq(manager.strategy(),       address(strategy));
+        assertEq(address(manager),             expectedInstance);
+        assertEq(manager.factory(),            address(factory));
+        assertEq(manager.implementation(),     implementation);
+        assertEq(manager.underlyingStrategy(), address(underlyingStrategy));
+        assertEq(manager.locked(),             1);
 
         assertEq(factory.isInstance(expectedInstance), true);
     }

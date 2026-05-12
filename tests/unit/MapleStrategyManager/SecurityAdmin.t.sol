@@ -6,7 +6,7 @@ import { TestBase } from "../../utils/TestBase.sol";
 contract SecurityAdminTests is TestBase {
 
     function test_securityAdmin_success() external view {
-        assertEq(manager.securityAdmin(), address(securityAdmin));
+        assertEq(strategyManager.securityAdmin(), address(securityAdmin));
     }
 
 }

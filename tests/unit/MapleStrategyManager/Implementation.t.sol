@@ -6,7 +6,7 @@ import { TestBase } from "../../utils/TestBase.sol";
 contract ImplementationTests is TestBase {
 
     function test_implementation_success() external view {
-        assertEq(manager.implementation(), address(implementation));
+        assertEq(strategyManager.implementation(), address(implementation));
     }
 
 }

@@ -6,12 +6,13 @@ import { IMapleProxyFactory } from "../../../modules/proxy-factory/contracts/int
 import { IMapleStrategyManagerInitializer } from "../../../contracts/interfaces/IMapleStrategyManagerInitializer.sol";
 
 import { MapleStrategyManagerHarness } from "../../utils/Harnesses.sol";
+import { MockGlobals }                 from "../../utils/Mocks.sol";
 import { TestBase }                    from "../../utils/TestBase.sol";
 
 contract CreateInstanceTests is TestBase {
 
     function test_createInstance_revert_invalidDeployer() external {
-        globals.__setCanDeploy(deployer, false);
+        MockGlobals(globals).__setCanDeploy(deployer, false);
 
         vm.prank(deployer);
         vm.expectRevert("MSMF:CI:CANNOT_DEPLOY");
@@ -19,7 +20,7 @@ contract CreateInstanceTests is TestBase {
     }
 
     function test_createInstance_revert_protocolPaused() external {
-        globals.__setProtocolPaused(true);
+        MockGlobals(globals).__setProtocolPaused(true);
 
         vm.prank(deployer);
         vm.expectRevert("MPF:PROTOCOL_PAUSED");
@@ -47,13 +48,13 @@ contract CreateInstanceTests is TestBase {
         emit IMapleProxyFactory.InstanceDeployed(100, expectedInstance, arguments);
 
         vm.prank(deployer);
-        manager = MapleStrategyManagerHarness(factory.createInstance(arguments, salt));
+        strategyManager = MapleStrategyManagerHarness(factory.createInstance(arguments, salt));
 
-        assertEq(address(manager),             expectedInstance);
-        assertEq(manager.factory(),            address(factory));
-        assertEq(manager.implementation(),     implementation);
-        assertEq(manager.underlyingStrategy(), address(underlyingStrategy));
-        assertEq(manager.locked(),             1);
+        assertEq(address(strategyManager),             expectedInstance);
+        assertEq(strategyManager.factory(),            address(factory));
+        assertEq(strategyManager.implementation(),     implementation);
+        assertEq(strategyManager.underlyingStrategy(), underlyingStrategy);
+        assertEq(strategyManager.locked(),             1);
 
         assertEq(factory.isInstance(expectedInstance), true);
     }

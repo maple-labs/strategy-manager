@@ -3,7 +3,8 @@ pragma solidity ^0.8.0;
 
 import { MapleStrategyManager } from "../../../contracts/MapleStrategyManager.sol";
 
-import { TestBase } from "../../utils/TestBase.sol";
+import { MockGlobals } from "../../utils/Mocks.sol";
+import { TestBase }    from "../../utils/TestBase.sol";
 
 contract SetImplementationTests is TestBase {
 
@@ -16,24 +17,24 @@ contract SetImplementationTests is TestBase {
     }
 
     function test_setImplementation_revert_functionPaused() external {
-        globals.__setIsFunctionPaused(MapleStrategyManager.setImplementation.selector, true);
+        MockGlobals(globals).__setIsFunctionPaused(MapleStrategyManager.setImplementation.selector, true);
 
         vm.expectRevert("MSM:PAUSED");
-        manager.setImplementation(newImplementation);
+        strategyManager.setImplementation(newImplementation);
     }
 
     function test_setImplementation_revert_notFactory() external {
         vm.expectRevert("MSM:NOT_FACTORY");
-        manager.setImplementation(newImplementation);
+        strategyManager.setImplementation(newImplementation);
     }
 
     function test_setImplementation_success() external {
-        assertEq(manager.implementation(), implementation);
+        assertEq(strategyManager.implementation(), implementation);
 
         vm.prank(address(factory));
-        manager.setImplementation(newImplementation);
+        strategyManager.setImplementation(newImplementation);
 
-        assertEq(manager.implementation(), newImplementation);
+        assertEq(strategyManager.implementation(), newImplementation);
     }
 
 }

@@ -3,8 +3,14 @@ pragma solidity 0.8.28;
 
 import { MapleProxiedInternals } from "../modules/proxy-factory/contracts/MapleProxiedInternals.sol";
 
-import { IMapleStrategyManager }           from "./interfaces/IMapleStrategyManager.sol";
-import { IGlobalsLike, IProxyFactoryLike } from "./interfaces/Interfaces.sol";
+import { IMapleStrategyManager } from "./interfaces/IMapleStrategyManager.sol";
+
+import {
+    IGlobalsLike,
+    IProxyFactoryLike,
+    IPoolManagerLike,
+    IUnderlyingStrategyLike
+} from "./interfaces/Interfaces.sol";
 
 import { MapleStrategyManagerStorage } from "./MapleStrategyManagerStorage.sol";
 
@@ -26,6 +32,19 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         _;
 
         _locked = 1;
+    }
+
+    modifier onlyOperator() {
+        address globals_ = globals();
+
+        require(
+            IGlobalsLike(globals_).isInstanceOf("LIQUIDITY_BOT",    msg.sender) ||
+            IGlobalsLike(globals_).isInstanceOf("LIQUIDITY_ROUTER", msg.sender) ||
+            msg.sender == IGlobalsLike(globals_).strategyDelegateOf(address(this)),
+            "MSM:NOT_AUTHORIZED"
+        );
+
+        _;
     }
 
     modifier onlyFactory() {
@@ -72,9 +91,48 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /*** State-Changing Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
 
+    // TODO: Consider adding minShares. What can go wrong if bot key gets compromised.
+    function fundStrategyManager(address poolManager_, uint256 assetsIn_, bytes calldata data_)
+        external override whenProtocolNotPaused nonReentrant onlyOperator
+    {
+        require(assetsIn_ != 0, "MSM:FSM:ZERO_ASSETS");
+
+        address factory_ = IPoolManagerLike(poolManager_).factory();
+
+        require(IGlobalsLike(globals()).isInstanceOf("POOL_MANAGER_FACTORY", factory_), "MSM:FSM:INVALID_PM_FACTORY");
+        require(IProxyFactoryLike(factory_).isInstance(poolManager_),                   "MSM:FSM:INVALID_PM");
+
+        address underlyingStrategy_ = underlyingStrategy;
+        uint256 totalAssetsBefore_  = assetsUnderManagement();
+
+        IPoolManagerLike(poolManager_).requestFunds(underlyingStrategy_, assetsIn_);
+
+        // TODO: Check if underlying strategy will always implement this function or we need to check before calling.
+        uint256 assetsDeposited_ = IUnderlyingStrategyLike(underlyingStrategy_).fundUnderlyingStrategy(assetsIn_, data_);
+        uint256 sharesMinted_    = _convertToShares(assetsDeposited_, totalAssetsBefore_);
+
+        require(sharesMinted_ != 0, "MSM:FSM:ZERO_SHARES");
+
+        sharesOf[poolManager_] += sharesMinted_;
+        totalShares            += sharesMinted_;
+
+        require(assetsOf(poolManager_)  <= poolCap[poolManager_], "MSM:FSM:POOL_CAP");
+        require(assetsUnderManagement() <= totalCap,              "MSM:FSM:TOTAL_CAP");
+
+        emit StrategyManagerFunded(poolManager_, assetsIn_, assetsDeposited_, sharesMinted_);
+    }
+
     /**************************************************************************************************************************************/
     /*** View Functions                                                                                                                 ***/
     /**************************************************************************************************************************************/
+
+    function assetsOf(address poolManager_) public view override returns (uint256 assets_) {
+        assets_ = _convertToAssets(sharesOf[poolManager_], assetsUnderManagement());
+    }
+
+    function assetsUnderManagement() public view override returns (uint256 assetsUnderManagement_) {
+        assetsUnderManagement_ = IUnderlyingStrategyLike(underlyingStrategy).assetsUnderManagement();
+    }
 
     function factory() external view override returns (address factory_) {
         factory_ = _factory();
@@ -95,5 +153,23 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /**************************************************************************************************************************************/
     /*** Internal Functions                                                                                                             ***/
     /**************************************************************************************************************************************/
+
+    function _convertToAssets(uint256 shares_, uint256 totalAssets_) internal view returns (uint256 assets_) {
+        uint256 totalShares_ = totalShares;
+
+        if (totalShares_ == 0) return shares_;
+
+        assets_ = shares_ * totalAssets_ / totalShares_;
+    }
+
+    function _convertToShares(uint256 assets_, uint256 totalAssets_) internal view returns (uint256 shares_) {
+        uint256 totalShares_ = totalShares;
+
+        if (totalShares_ == 0) return assets_;
+
+        // TODO: What if totalAssets_ = 0 but totalShares_ > 0? Currently we are following the same pattern as we have in MaplePool.sol
+        //       Reconsider if this is the desired behavior.
+        shares_ = assets_ * totalShares_ / totalAssets_;
+    }
 
 }

@@ -9,13 +9,21 @@ import { MapleStrategyManagerFactory } from "../../contracts/MapleStrategyManage
 
 import { MapleStrategyManagerHarness, MapleStrategyManagerInitializerHarness } from "./Harnesses.sol";
 
-import { MockGlobals, MockStrategy } from "./Mocks.sol";
+import {
+    MockGlobals,
+    MockPoolManager,
+    MockPoolManagerFactory,
+    MockStrategy
+} from "./Mocks.sol";
 
 contract TestBase is Test {
 
-    address deployer      = makeAddr("deployer");
-    address governor      = makeAddr("governor");
-    address securityAdmin = makeAddr("securityAdmin");
+    address deployer         = makeAddr("deployer");
+    address governor         = makeAddr("governor");
+    address liquidityBot     = makeAddr("liquidityBot");
+    address liquidityRouter  = makeAddr("liquidityRouter");
+    address securityAdmin    = makeAddr("securityAdmin");
+    address strategyDelegate = makeAddr("strategyDelegate");
 
     address implementation = address(new MapleStrategyManagerHarness());
     address initializer    = address(new MapleStrategyManagerInitializerHarness());
@@ -24,20 +32,28 @@ contract TestBase is Test {
 
     IMapleStrategyManagerInitializer.Parameters params;
 
-    MockGlobals  globals            = new MockGlobals();
-    MockStrategy underlyingStrategy = new MockStrategy();
+    address globals            = address(new MockGlobals());
+    address poolManagerFactory = address(new MockPoolManagerFactory());
+    address poolManager        = address(new MockPoolManager());
+    address underlyingStrategy = address(new MockStrategy());
 
     MapleStrategyManagerFactory factory;
-    MapleStrategyManagerHarness manager;
+    MapleStrategyManagerHarness strategyManager;
 
     function setUp() public virtual {
         startingTime = uint32(block.timestamp);
 
-        globals.__setCanDeploy(deployer, true);
-        globals.__setGovernor(governor);
-        globals.__setSecurityAdmin(securityAdmin);
+        MockGlobals(globals).__setCanDeploy(deployer, true);
+        MockGlobals(globals).__setGovernor(governor);
+        MockGlobals(globals).__setIsInstanceOf("LIQUIDITY_BOT",        liquidityBot,       true);
+        MockGlobals(globals).__setIsInstanceOf("LIQUIDITY_ROUTER",     liquidityRouter,    true);
+        MockGlobals(globals).__setIsInstanceOf("POOL_MANAGER_FACTORY", poolManagerFactory, true);
+        MockGlobals(globals).__setSecurityAdmin(securityAdmin);
 
-        factory = new MapleStrategyManagerFactory(address(globals));
+        MockPoolManager(poolManager).__setFactory(poolManagerFactory);
+        MockPoolManagerFactory(poolManagerFactory).__setIsInstance(poolManager, true);
+
+        factory = new MapleStrategyManagerFactory(globals);
 
         vm.startPrank(governor);
         factory.registerImplementation(100, implementation, initializer);
@@ -45,11 +61,18 @@ contract TestBase is Test {
         vm.stopPrank();
 
         params = IMapleStrategyManagerInitializer.Parameters({
-            underlyingStrategy: address(underlyingStrategy)
+            underlyingStrategy: underlyingStrategy
         });
 
         vm.prank(deployer);
-        manager = MapleStrategyManagerHarness(factory.createInstance(abi.encode(params), "DEFAULT"));
+        strategyManager = MapleStrategyManagerHarness(factory.createInstance(abi.encode(params), "DEFAULT"));
+
+        MockGlobals(globals).__setStrategyDelegate(address(strategyManager), strategyDelegate);
+    }
+
+    function setStrategyManagerState(uint256 aum_, uint256 totalShares_) internal {
+        MockStrategy(underlyingStrategy).__setAssetsUnderManagement(aum_);
+        strategyManager.__setTotalShares(totalShares_);
     }
 
 }

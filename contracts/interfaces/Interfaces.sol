@@ -7,6 +7,8 @@ interface IGlobalsLike {
 
     function isFunctionPaused(bytes4 signature) external view returns (bool);
 
+    function isInstanceOf(bytes32 instanceId, address instance) external view returns (bool isInstance);
+
     function securityAdmin() external view returns (address);
 
     function strategyDelegateOf(address strategyManager) external view returns (address);
@@ -15,8 +17,26 @@ interface IGlobalsLike {
 
 interface IProxyFactoryLike {
 
+    function isInstance(address instance) external view returns (bool isInstance);
+
     function mapleGlobals() external view returns (address);
 
     function upgradeInstance(uint256 version, bytes calldata arguments) external;
+
+}
+
+interface IPoolManagerLike {
+
+    function factory() external view returns (address factory);
+
+    function requestFunds(address destination, uint256 principal) external;
+
+}
+
+interface IUnderlyingStrategyLike {
+
+    function assetsUnderManagement() external view returns (uint256 assetsUnderManagement);
+
+    function fundUnderlyingStrategy(uint256 assets, bytes calldata data) external returns (uint256 amount);
 
 }

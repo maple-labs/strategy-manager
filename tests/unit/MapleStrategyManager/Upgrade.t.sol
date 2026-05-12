@@ -5,8 +5,8 @@ import { IMapleProxied } from "../../../modules/proxy-factory/contracts/interfac
 
 import { MapleStrategyManager } from "../../../contracts/MapleStrategyManager.sol";
 
-import { MockMigrator } from "../../utils/Mocks.sol";
-import { TestBase }     from "../../utils/TestBase.sol";
+import { MockGlobals, MockMigrator } from "../../utils/Mocks.sol";
+import { TestBase }                  from "../../utils/TestBase.sol";
 
 contract UpgradeTests is TestBase {
 
@@ -25,24 +25,24 @@ contract UpgradeTests is TestBase {
     }
 
     function test_upgrade_revert_functionPaused() external {
-        globals.__setIsFunctionPaused(MapleStrategyManager.upgrade.selector, true);
+        MockGlobals(globals).__setIsFunctionPaused(MapleStrategyManager.upgrade.selector, true);
 
         vm.prank(securityAdmin);
         vm.expectRevert("MSM:PAUSED");
-        manager.upgrade(200, arguments);
+        strategyManager.upgrade(200, arguments);
     }
 
     function test_upgrade_revert_protocolPaused() external {
-        globals.__setProtocolPaused(true);
+        MockGlobals(globals).__setProtocolPaused(true);
 
         vm.prank(securityAdmin);
         vm.expectRevert("MPF:PROTOCOL_PAUSED");
-        manager.upgrade(200, arguments);
+        strategyManager.upgrade(200, arguments);
     }
 
     function test_upgrade_revert_notAuthorized() external {
         vm.expectRevert("MSM:U:NOT_AUTHORIZED");
-        manager.upgrade(200, arguments);
+        strategyManager.upgrade(200, arguments);
     }
 
     function test_upgrade_revert_notAllowed() external {
@@ -51,27 +51,27 @@ contract UpgradeTests is TestBase {
 
         vm.prank(securityAdmin);
         vm.expectRevert("MPF:UI:NOT_ALLOWED");
-        manager.upgrade(200, arguments);
+        strategyManager.upgrade(200, arguments);
     }
 
     function test_upgrade_revert_internalFailure() external {
         vm.prank(securityAdmin);
         vm.expectRevert("MPF:UI:FAILED");
-        manager.upgrade(200, "");
+        strategyManager.upgrade(200, "");
     }
 
     function test_upgrade_success() external {
-        assertEq(manager.implementation(),     implementation);
-        assertEq(manager.underlyingStrategy(), address(underlyingStrategy));
+        assertEq(strategyManager.implementation(),     implementation);
+        assertEq(strategyManager.underlyingStrategy(), params.underlyingStrategy);
 
         vm.expectEmit();
         emit IMapleProxied.Upgraded(200, arguments);
 
         vm.prank(securityAdmin);
-        manager.upgrade(200, arguments);
+        strategyManager.upgrade(200, arguments);
 
-        assertEq(manager.implementation(),     newImplementation);
-        assertEq(manager.underlyingStrategy(), address(1337));
+        assertEq(strategyManager.implementation(),     newImplementation);
+        assertEq(strategyManager.underlyingStrategy(), address(1337));
     }
 
 }

@@ -9,4 +9,10 @@ contract MapleStrategyManagerStorage is IMapleStrategyManagerStorage {
 
     address public override underlyingStrategy;
 
+    uint256 public override totalCap;
+    uint256 public override totalShares;
+
+    mapping(address => uint256) public override poolCap;
+    mapping(address => uint256) public override sharesOf;
+
 }

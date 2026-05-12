@@ -6,7 +6,7 @@ import { TestBase } from "../../utils/TestBase.sol";
 contract GlobalsTests is TestBase {
 
     function test_globals_success() external view {
-        assertEq(manager.globals(), address(globals));
+        assertEq(strategyManager.globals(), globals);
     }
 
 }

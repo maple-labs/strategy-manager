@@ -17,7 +17,7 @@ contract InitializeTests is TestBase {
         vm.prank(address(factory));
         proxy.__initialize(params);
 
-        assertEq(proxy.underlyingStrategy(), address(underlyingStrategy));
+        assertEq(proxy.underlyingStrategy(), underlyingStrategy);
     }
 
 }

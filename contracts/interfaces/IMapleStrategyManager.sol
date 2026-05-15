@@ -15,6 +15,13 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     /**************************************************************************************************************************************/
 
     /**
+     *  @dev   Emitted when a redemption is requested for a pool manager.
+     *  @param poolManager     Address of the pool manager whose shares are being queued for redemption.
+     *  @param sharesRequested Number of shares queued for redemption.
+     */
+    event RedemptionRequested(address indexed poolManager, uint256 sharesRequested);
+
+    /**
      *  @dev   Emitted when a pool manager funds the strategy manager.
      *  @param poolManager     Address of the pool manager that received shares.
      *  @param assetsIn        Amount of assets pulled from the pool.
@@ -39,6 +46,14 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
      *  @param data        Arbitrary data forwarded to the underlying strategy on `fundUnderlyingStrategy`.
      */
     function fundStrategyManager(address poolManager, uint256 assetsIn, bytes calldata data) external;
+
+    /**
+     *  @dev   Requests a redemption of shares for a pool manager. Does not reduce the pool manager's share balance until
+     *         the redemption is processed.
+     *  @param poolManager Address of the pool manager requesting the redemption.
+     *  @param shares      Number of shares to queue for redemption.
+     */
+    function requestRedeem(address poolManager, uint256 shares) external;
 
     /**************************************************************************************************************************************/
     /*** View Functions                                                                                                                 ***/

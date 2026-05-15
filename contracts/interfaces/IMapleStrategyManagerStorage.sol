@@ -14,6 +14,13 @@ interface IMapleStrategyManagerStorage {
     function poolCap(address poolManager) external view returns (uint256 poolCap);
 
     /**
+     *  @dev    Returns the number of pending redemption shares held by a given pool manager.
+     *  @param  poolManager     Address of the pool manager.
+     *  @return pendingSharesOf Number of shares the pool manager has requested to redeem but has not yet processed.
+     */
+    function pendingSharesOf(address poolManager) external view returns (uint256 pendingSharesOf);
+
+    /**
      *  @dev    Returns the share balance held by a given pool manager.
      *  @param  poolManager Address of the pool manager.
      *  @return sharesOf    Number of shares owned by the pool manager.
@@ -25,6 +32,12 @@ interface IMapleStrategyManagerStorage {
      *  @return totalCap The maximum total assets the strategy manager will accept.
      */
     function totalCap() external view returns (uint256 totalCap);
+
+    /**
+     *  @dev    Returns the total number of pending redemption shares across all pool managers.
+     *  @return totalPendingShares Sum of all pending redemption shares.
+     */
+    function totalPendingShares() external view returns (uint256 totalPendingShares);
 
     /**
      *  @dev    Returns the total number of shares issued by the strategy manager.

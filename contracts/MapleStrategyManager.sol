@@ -122,6 +122,19 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         emit StrategyManagerFunded(poolManager_, assetsIn_, assetsDeposited_, sharesMinted_);
     }
 
+    // TODO: Do we need to validate poolManager here?
+    function requestRedeem(address poolManager_, uint256 shares_) external override whenProtocolNotPaused nonReentrant onlyOperator {
+        uint256 remainingShares_ = sharesOf[poolManager_] - pendingSharesOf[poolManager_];
+
+        require(shares_ != 0,                "MSM:RR:ZERO_SHARES");
+        require(shares_ <= remainingShares_, "MSM:RR:INSUFFICIENT_SHARES");
+
+        pendingSharesOf[poolManager_] += shares_;
+        totalPendingShares            += shares_;
+
+        emit RedemptionRequested(poolManager_, shares_);
+    }
+
     /**************************************************************************************************************************************/
     /*** View Functions                                                                                                                 ***/
     /**************************************************************************************************************************************/

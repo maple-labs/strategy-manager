@@ -15,6 +15,13 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     /**************************************************************************************************************************************/
 
     /**
+     *  @dev   Emitted when a pending redemption is cancelled for a pool manager.
+     *  @param poolManager     Address of the pool manager whose pending shares were reduced.
+     *  @param sharesCancelled Number of pending shares cancelled.
+     */
+    event RedemptionCancelled(address indexed poolManager, uint256 sharesCancelled);
+
+    /**
      *  @dev   Emitted when a redemption is requested for a pool manager.
      *  @param poolManager     Address of the pool manager whose shares are being queued for redemption.
      *  @param sharesRequested Number of shares queued for redemption.
@@ -38,6 +45,13 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     /**************************************************************************************************************************************/
     /*** State-Changing Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
+
+    /**
+     *  @dev   Cancels a previously queued redemption, reducing the pool manager's pending shares.
+     *  @param poolManager Address of the pool manager whose redemption is being cancelled.
+     *  @param shares      Number of pending shares to cancel.
+     */
+    function cancelRedemption(address poolManager, uint256 shares) external;
 
     /**
      *  @dev   Pulls assets from a pool manager into the underlying strategy and credits the pool manager with shares.

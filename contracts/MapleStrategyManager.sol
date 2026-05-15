@@ -91,6 +91,16 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /*** State-Changing Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
 
+    function cancelRedemption(address poolManager_, uint256 shares_) external override whenProtocolNotPaused nonReentrant onlyOperator {
+        require(shares_ != 0,                             "MSM:CR:ZERO_SHARES");
+        require(shares_ <= pendingSharesOf[poolManager_], "MSM:CR:INSUFFICIENT_SHARES");
+
+        pendingSharesOf[poolManager_] -= shares_;
+        totalPendingShares            -= shares_;
+
+        emit RedemptionCancelled(poolManager_, shares_);
+    }
+
     // TODO: Consider adding minShares. What can go wrong if bot key gets compromised.
     function fundStrategyManager(address poolManager_, uint256 assetsIn_, bytes calldata data_)
         external override whenProtocolNotPaused nonReentrant onlyOperator

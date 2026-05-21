@@ -29,14 +29,20 @@ interface IPoolManagerLike {
 
     function factory() external view returns (address factory);
 
+    function pool() external view returns (address pool);
+
     function requestFunds(address destination, uint256 principal) external;
 
 }
 
 interface IUnderlyingStrategyLike {
 
+    function availableToWithdraw() external view returns (uint256 availableToWithdraw);
+
     function assetsUnderManagement() external view returns (uint256 assetsUnderManagement);
 
     function fundUnderlyingStrategy(uint256 assets, bytes calldata data) external returns (uint256 amount);
+
+    function withdrawFromUnderlyingStrategy(address destination, uint256 assets, bytes calldata data) external;
 
 }

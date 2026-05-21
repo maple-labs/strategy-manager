@@ -10,6 +10,7 @@ import { MapleStrategyManagerFactory } from "../../contracts/MapleStrategyManage
 import { MapleStrategyManagerHarness, MapleStrategyManagerInitializerHarness } from "./Harnesses.sol";
 
 import {
+    MockERC20,
     MockGlobals,
     MockPoolManager,
     MockPoolManagerFactory,
@@ -33,8 +34,10 @@ contract TestBase is Test {
     IMapleStrategyManagerInitializer.Parameters params;
 
     address globals            = address(new MockGlobals());
+    address pool               = makeAddr("pool");
     address poolManagerFactory = address(new MockPoolManagerFactory());
     address poolManager        = address(new MockPoolManager());
+    address asset              = address(new MockERC20());
     address underlyingStrategy = address(new MockStrategy());
 
     MapleStrategyManagerFactory factory;
@@ -51,7 +54,10 @@ contract TestBase is Test {
         MockGlobals(globals).__setSecurityAdmin(securityAdmin);
 
         MockPoolManager(poolManager).__setFactory(poolManagerFactory);
+        MockPoolManager(poolManager).__setPool(pool);
         MockPoolManagerFactory(poolManagerFactory).__setIsInstance(poolManager, true);
+
+        MockStrategy(underlyingStrategy).__setAsset(address(asset));
 
         factory = new MapleStrategyManagerFactory(globals);
 
@@ -72,6 +78,8 @@ contract TestBase is Test {
 
     function setStrategyManagerState(uint256 aum_, uint256 totalShares_) internal {
         MockStrategy(underlyingStrategy).__setAssetsUnderManagement(aum_);
+        // TODO: Consider adding availableToWithdraw_ as a separate parameter if tests need to model partial liquidity.
+        MockStrategy(underlyingStrategy).__setAvailableToWithdraw(aum_);
         strategyManager.__setTotalShares(totalShares_);
     }
 

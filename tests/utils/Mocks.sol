@@ -59,11 +59,16 @@ contract MockMigrator is MapleStrategyManagerStorage {
 contract MockPoolManager {
 
     address public factory;
+    address public pool;
 
     function requestFunds(address, uint256) external {}
 
     function __setFactory(address factory_) external {
         factory = factory_;
+    }
+
+    function __setPool(address pool_) external {
+        pool = pool_;
     }
 
 }
@@ -78,24 +83,72 @@ contract MockPoolManagerFactory {
 
 }
 
+contract MockERC20 {
+
+    mapping(address => uint256) public balanceOf;
+
+    uint256 public totalSupply;
+
+    function transfer(address to_, uint256 amount_) external returns (bool success_) {
+        balanceOf[msg.sender] -= amount_;
+        balanceOf[to_]        += amount_;
+
+        return true;
+    }
+
+    function __mint(address account_, uint256 amount_) external {
+        totalSupply         += amount_;
+        balanceOf[account_] += amount_;
+    }
+
+    function __setBalance(address account_, uint256 balance_) external {
+        totalSupply         = totalSupply - balanceOf[account_] + balance_;
+        balanceOf[account_] = balance_;
+    }
+
+}
+
 contract MockStrategy {
 
+    address public asset;
+
     uint256 public assetsUnderManagement;
+    uint256 public availableToWithdraw;
 
     uint256 internal _fundReturn;
+
+    function __setAsset(address asset_) external {
+        asset = asset_;
+    }
+
+    function __setAvailableToWithdraw(uint256 availableToWithdraw_) external {
+        availableToWithdraw = availableToWithdraw_;
+    }
+
+    function __setAssetsUnderManagement(uint256 assetsUnderManagement_) external {
+        assetsUnderManagement = assetsUnderManagement_;
+
+        MockERC20(asset).__setBalance(address(this), assetsUnderManagement_);
+    }
+
+    function __setFundUnderlyingStrategyReturn(uint256 fundReturn_) external {
+        _fundReturn = fundReturn_;
+    }
 
     function fundUnderlyingStrategy(uint256, bytes calldata) external returns (uint256 amount_) {
         amount_ = _fundReturn;
 
         assetsUnderManagement += _fundReturn;
+        availableToWithdraw   += _fundReturn;
+
+        MockERC20(asset).__mint(address(this), _fundReturn);
     }
 
-    function __setAssetsUnderManagement(uint256 assetsUnderManagement_) external {
-        assetsUnderManagement = assetsUnderManagement_;
-    }
+    function withdrawFromUnderlyingStrategy(address destination_, uint256 assets_, bytes calldata) external {
+        assetsUnderManagement -= assets_;
+        availableToWithdraw   -= assets_;
 
-    function __setFundUnderlyingStrategyReturn(uint256 fundReturn_) external {
-        _fundReturn = fundReturn_;
+        MockERC20(asset).transfer(destination_, assets_);
     }
 
 }

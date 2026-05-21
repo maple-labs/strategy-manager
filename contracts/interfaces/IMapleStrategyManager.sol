@@ -22,6 +22,14 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     event RedemptionCancelled(address indexed poolManager, uint256 sharesCancelled);
 
     /**
+     *  @dev   Emitted when a pending redemption is processed for a pool manager.
+     *  @param poolManager     Address of the pool manager whose shares were redeemed.
+     *  @param sharesProcessed Number of shares processed for redemption.
+     *  @param assetsWithdrawn  Number of assets withdrawn from the underlying strategy.
+     */
+    event RedemptionProcessed(address indexed poolManager, uint256 sharesProcessed, uint256 assetsWithdrawn);
+
+    /**
      *  @dev   Emitted when a redemption is requested for a pool manager.
      *  @param poolManager     Address of the pool manager whose shares are being queued for redemption.
      *  @param sharesRequested Number of shares queued for redemption.
@@ -62,6 +70,15 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     function fundStrategyManager(address poolManager, uint256 assetsIn, bytes calldata data) external;
 
     /**
+     *  @dev    Process a pending redemption.
+     *          Withdraws from underlying strategy and sends assets directly to pool.
+     *  @param  poolManager Address of the pool manager whose redemption to process.
+     *  @param  shares      Amount of shares to process.
+     *  @param  data        Arbitrary data forwarded to the underlying strategy on `withdrawFromUnderlyingStrategy`.
+     */
+    function processRedemption(address poolManager, uint256 shares, bytes calldata data) external;
+
+    /**
      *  @dev   Requests a redemption of shares for a pool manager. Does not reduce the pool manager's share balance until
      *         the redemption is processed.
      *  @param poolManager Address of the pool manager requesting the redemption.
@@ -79,6 +96,12 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
      *  @return assets      Assets currently belonging to the pool manager.
      */
     function assetsOf(address poolManager) external view returns (uint256 assets);
+
+    /**
+     *  @dev    Returns the assets currently available to withdraw from the underlying strategy.
+     *  @return availableToWithdraw Assets available to withdraw.
+     */
+    function availableToWithdraw() external view returns (uint256 availableToWithdraw);
 
     /**
      *  @dev    Returns the total assets currently under management by the underlying strategy.

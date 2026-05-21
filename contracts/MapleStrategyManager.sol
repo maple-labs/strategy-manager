@@ -110,6 +110,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         address factory_ = IPoolManagerLike(poolManager_).factory();
 
         require(IGlobalsLike(globals()).isInstanceOf("POOL_MANAGER_FACTORY", factory_), "MSM:FSM:INVALID_PM_FACTORY");
+        // TODO: validate the poolManager is also attached to the strategy
         require(IProxyFactoryLike(factory_).isInstance(poolManager_),                   "MSM:FSM:INVALID_PM");
 
         address underlyingStrategy_ = underlyingStrategy;
@@ -132,6 +133,38 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         emit StrategyManagerFunded(poolManager_, assetsIn_, assetsDeposited_, sharesMinted_);
     }
 
+    // TODO: Do we need to validate poolManager here? Consider adding minAssets?
+    function processRedemption(
+        address poolManager_,
+        uint256 shares_,
+        bytes calldata data_
+    )
+        external override whenProtocolNotPaused nonReentrant onlyOperator
+    {
+        require(shares_ != 0,                             "MSM:PR:ZERO_SHARES");
+        require(shares_ <= pendingSharesOf[poolManager_], "MSM:PR:EXCEEDS_REQUESTED");
+
+        uint256 assets_ = _convertToAssets(shares_, assetsUnderManagement());
+
+        require(assets_ != 0,                     "MSM:PR:ZERO_ASSETS");
+        require(assets_ <= availableToWithdraw(), "MSM:PR:NOT_ENOUGH_LIQUIDITY");
+
+        pendingSharesOf[poolManager_] -= shares_;
+        totalPendingShares            -= shares_;
+
+        sharesOf[poolManager_] -= shares_;
+        totalShares            -= shares_;
+
+        IUnderlyingStrategyLike(underlyingStrategy).withdrawFromUnderlyingStrategy(
+            IPoolManagerLike(poolManager_).pool(),
+            assets_,
+            data_
+        );
+
+        // TODO: Consider emitting data as well?
+        emit RedemptionProcessed(poolManager_, shares_, assets_);
+    }
+
     // TODO: Do we need to validate poolManager here?
     function requestRedeem(address poolManager_, uint256 shares_) external override whenProtocolNotPaused nonReentrant onlyOperator {
         uint256 remainingShares_ = sharesOf[poolManager_] - pendingSharesOf[poolManager_];
@@ -151,6 +184,10 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
 
     function assetsOf(address poolManager_) public view override returns (uint256 assets_) {
         assets_ = _convertToAssets(sharesOf[poolManager_], assetsUnderManagement());
+    }
+
+    function availableToWithdraw() public view override returns (uint256 availableToWithdraw_) {
+        availableToWithdraw_ = IUnderlyingStrategyLike(underlyingStrategy).availableToWithdraw();
     }
 
     function assetsUnderManagement() public view override returns (uint256 assetsUnderManagement_) {

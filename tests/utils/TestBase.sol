@@ -23,6 +23,7 @@ contract TestBase is Test {
     address governor         = makeAddr("governor");
     address liquidityBot     = makeAddr("liquidityBot");
     address liquidityRouter  = makeAddr("liquidityRouter");
+    address operationalAdmin = makeAddr("operationalAdmin");
     address securityAdmin    = makeAddr("securityAdmin");
     address strategyDelegate = makeAddr("strategyDelegate");
 
@@ -51,6 +52,7 @@ contract TestBase is Test {
         MockGlobals(globals).__setIsInstanceOf("LIQUIDITY_BOT",        liquidityBot,       true);
         MockGlobals(globals).__setIsInstanceOf("LIQUIDITY_ROUTER",     liquidityRouter,    true);
         MockGlobals(globals).__setIsInstanceOf("POOL_MANAGER_FACTORY", poolManagerFactory, true);
+        MockGlobals(globals).__setOperationalAdmin(operationalAdmin);
         MockGlobals(globals).__setSecurityAdmin(securityAdmin);
 
         MockPoolManager(poolManager).__setFactory(poolManagerFactory);
@@ -81,6 +83,11 @@ contract TestBase is Test {
         // TODO: Consider adding availableToWithdraw_ as a separate parameter if tests need to model partial liquidity.
         MockStrategy(underlyingStrategy).__setAvailableToWithdraw(aum_);
         strategyManager.__setTotalShares(totalShares_);
+    }
+
+    function setPoolManagerCap(address poolManager_, uint256 cap_) internal {
+        vm.prank(strategyDelegate);
+        strategyManager.setPoolManagerCap(poolManager_, cap_);
     }
 
 }

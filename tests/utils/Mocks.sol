@@ -6,6 +6,7 @@ import { MapleStrategyManagerStorage } from "../../contracts/MapleStrategyManage
 contract MockGlobals {
 
     address public governor;
+    address public operationalAdmin;
     address public securityAdmin;
 
     bool public protocolPaused;
@@ -32,6 +33,10 @@ contract MockGlobals {
 
     function __setIsInstanceOf(bytes32 instanceId_, address instance_, bool isInstance_) external {
         isInstanceOf[instanceId_][instance_] = isInstance_;
+    }
+
+    function __setOperationalAdmin(address operationalAdmin_) external {
+        operationalAdmin = operationalAdmin_;
     }
 
     function __setProtocolPaused(bool protocolPaused_) external {

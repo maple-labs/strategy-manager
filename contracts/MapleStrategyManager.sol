@@ -34,14 +34,13 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         _locked = 1;
     }
 
-    modifier onlyOperator() {
+    modifier onlyAdmin() {
         address globals_ = globals();
 
         require(
-            IGlobalsLike(globals_).isInstanceOf("LIQUIDITY_BOT",    msg.sender) ||
-            IGlobalsLike(globals_).isInstanceOf("LIQUIDITY_ROUTER", msg.sender) ||
-            msg.sender == IGlobalsLike(globals_).strategyDelegateOf(address(this)),
-            "MSM:NOT_AUTHORIZED"
+            msg.sender == IGlobalsLike(globals_).strategyDelegateOf(address(this)) ||
+            msg.sender == IGlobalsLike(globals_).operationalAdmin(),
+            "MSM:NOT_ADMIN"
         );
 
         _;
@@ -49,6 +48,19 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
 
     modifier onlyFactory() {
         require(msg.sender == _factory(), "MSM:NOT_FACTORY");
+
+        _;
+    }
+
+    modifier onlyOperator() {
+        address globals_ = globals();
+
+        require(
+            IGlobalsLike(globals_).isInstanceOf("LIQUIDITY_BOT",    msg.sender) ||
+            IGlobalsLike(globals_).isInstanceOf("LIQUIDITY_ROUTER", msg.sender) ||
+            msg.sender == IGlobalsLike(globals_).strategyDelegateOf(address(this)),
+            "MSM:NOT_OPERATOR"
+        );
 
         _;
     }
@@ -88,7 +100,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     }
 
     /**************************************************************************************************************************************/
-    /*** State-Changing Functions                                                                                                       ***/
+    /*** Liquidity Management Functions                                                                                                ***/
     /**************************************************************************************************************************************/
 
     function cancelRedemption(address poolManager_, uint256 shares_) external override whenProtocolNotPaused nonReentrant onlyOperator {
@@ -127,8 +139,8 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         sharesOf[poolManager_] += sharesMinted_;
         totalShares            += sharesMinted_;
 
-        require(assetsOf(poolManager_)  <= poolCap[poolManager_], "MSM:FSM:POOL_CAP");
-        require(assetsUnderManagement() <= totalCap,              "MSM:FSM:TOTAL_CAP");
+        require(assetsOf(poolManager_)  <= poolManagerCapOf[poolManager_], "MSM:FSM:POOL_MANAGER_CAP");
+        require(assetsUnderManagement() <= totalCap,                       "MSM:FSM:TOTAL_CAP");
 
         emit StrategyManagerFunded(poolManager_, assetsIn_, assetsDeposited_, sharesMinted_);
     }
@@ -176,6 +188,25 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         totalPendingShares            += shares_;
 
         emit RedemptionRequested(poolManager_, shares_);
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Administrative Functions                                                                                                       ***/
+    /**************************************************************************************************************************************/
+
+    function setPoolManagerCap(address poolManager_, uint256 cap_) external override whenProtocolNotPaused onlyAdmin {
+        require(poolManagerCapOf[poolManager_] != cap_, "MSM:SPMC:NO_CHANGE");
+
+        if (cap_ != 0) {
+            address factory_ = IPoolManagerLike(poolManager_).factory();
+
+            require(IGlobalsLike(globals()).isInstanceOf("POOL_MANAGER_FACTORY", factory_), "MSM:SPMC:INVALID_PM_FACTORY");
+            require(IProxyFactoryLike(factory_).isInstance(poolManager_),                   "MSM:SPMC:INVALID_PM");
+        }
+
+        poolManagerCapOf[poolManager_] = cap_;
+
+        emit PoolManagerCapSet(poolManager_, cap_);
     }
 
     /**************************************************************************************************************************************/

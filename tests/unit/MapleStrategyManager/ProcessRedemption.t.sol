@@ -35,7 +35,7 @@ contract ProcessRedemptionFailureTests is TestBase {
     }
 
     function test_processRedemption_revert_notAuthorized() external {
-        vm.expectRevert("MSM:NOT_AUTHORIZED");
+        vm.expectRevert("MSM:NOT_OPERATOR");
         strategyManager.processRedemption(poolManager, 1, "");
     }
 
@@ -559,7 +559,7 @@ contract ProcessRedemptionSuccessTests is TestBase {
         assertEq(MockERC20(asset).balanceOf(pool), assetsExpected);
 
         /**********************************************************************************************************************************/
-        /*** Step 4: Fully withdraw remaining shares                                                                                     ***/
+        /*** Step 4: Fully withdraw remaining shares                                                                                    ***/
         /**********************************************************************************************************************************/
 
         uint256 remainingShares = totalShares - sharesRequested;
@@ -660,7 +660,7 @@ contract ProcessRedemptionSuccessTests is TestBase {
         assertEq(MockERC20(asset).balanceOf(pool), assetsExpected);
 
         /**********************************************************************************************************************************/
-        /*** Step 4: Fully withdraw remaining shares                                                                                     ***/
+        /*** Step 4: Fully withdraw remaining shares                                                                                    ***/
         /**********************************************************************************************************************************/
 
         uint256 remainingShares = totalShares - sharesRequested;
@@ -691,6 +691,257 @@ contract ProcessRedemptionSuccessTests is TestBase {
         assertEq(strategyManager.pendingSharesOf(poolManager), 0);
 
         assertEq(MockERC20(asset).balanceOf(pool), totalAumAfterYield);
+    }
+
+    function test_processRedemption_success_afterPoolManagerCapRevoked() external {
+        uint256 assetsToFund   = 100;
+        uint256 sharesToRedeem = 100;
+
+        strategyManager.__setTotalCap(type(uint256).max);
+
+        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.poolManagerCapOf(poolManager), 0);
+        assertEq(strategyManager.assetsUnderManagement(),       0);
+        assertEq(strategyManager.availableToWithdraw(),         0);
+        assertEq(strategyManager.totalShares(),                 0);
+        assertEq(strategyManager.totalPendingShares(),          0);
+
+        assertEq(strategyManager.sharesOf(poolManager),        0);
+        assertEq(strategyManager.pendingSharesOf(poolManager), 0);
+        assertEq(strategyManager.assetsOf(poolManager),        0);
+
+        assertEq(MockERC20(asset).balanceOf(pool), 0);
+
+        /**********************************************************************************************************************************/
+        /*** Step 1: Set pool manager cap                                                                                               ***/
+        /**********************************************************************************************************************************/
+
+        setPoolManagerCap(poolManager, type(uint256).max);
+
+        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.poolManagerCapOf(poolManager), type(uint256).max);
+        assertEq(strategyManager.assetsUnderManagement(),       0);
+        assertEq(strategyManager.availableToWithdraw(),         0);
+        assertEq(strategyManager.totalShares(),                 0);
+        assertEq(strategyManager.totalPendingShares(),          0);
+
+        assertEq(strategyManager.sharesOf(poolManager),        0);
+        assertEq(strategyManager.pendingSharesOf(poolManager), 0);
+        assertEq(strategyManager.assetsOf(poolManager),        0);
+
+        assertEq(MockERC20(asset).balanceOf(pool), 0);
+
+        /**********************************************************************************************************************************/
+        /*** Step 2: Fund strategy manager                                                                                              ***/
+        /**********************************************************************************************************************************/
+
+        MockStrategy(underlyingStrategy).__setFundUnderlyingStrategyReturn(assetsToFund);
+
+        vm.prank(liquidityBot);
+        strategyManager.fundStrategyManager(poolManager, assetsToFund, "");
+
+        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.poolManagerCapOf(poolManager), type(uint256).max);
+        assertEq(strategyManager.assetsUnderManagement(),       assetsToFund);
+        assertEq(strategyManager.availableToWithdraw(),         assetsToFund);
+        assertEq(strategyManager.totalShares(),                 assetsToFund);
+        assertEq(strategyManager.totalPendingShares(),          0);
+
+        assertEq(strategyManager.sharesOf(poolManager),        assetsToFund);
+        assertEq(strategyManager.pendingSharesOf(poolManager), 0);
+        assertEq(strategyManager.assetsOf(poolManager),        assetsToFund);
+
+        assertEq(MockERC20(asset).balanceOf(pool), 0);
+
+        /**********************************************************************************************************************************/
+        /*** Step 3: Revoke pool manager cap                                                                                            ***/
+        /**********************************************************************************************************************************/
+
+        setPoolManagerCap(poolManager, 0);
+
+        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.poolManagerCapOf(poolManager), 0);
+        assertEq(strategyManager.assetsUnderManagement(),       assetsToFund);
+        assertEq(strategyManager.availableToWithdraw(),         assetsToFund);
+        assertEq(strategyManager.totalShares(),                 assetsToFund);
+        assertEq(strategyManager.totalPendingShares(),          0);
+
+        assertEq(strategyManager.sharesOf(poolManager),        assetsToFund);
+        assertEq(strategyManager.pendingSharesOf(poolManager), 0);
+        assertEq(strategyManager.assetsOf(poolManager),        assetsToFund);
+
+        assertEq(MockERC20(asset).balanceOf(pool), 0);
+
+        /**********************************************************************************************************************************/
+        /*** Step 4: Request redemption                                                                                                 ***/
+        /**********************************************************************************************************************************/
+
+        vm.prank(liquidityBot);
+        strategyManager.requestRedeem(poolManager, sharesToRedeem);
+
+        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.poolManagerCapOf(poolManager), 0);
+        assertEq(strategyManager.assetsUnderManagement(),       assetsToFund);
+        assertEq(strategyManager.availableToWithdraw(),         assetsToFund);
+        assertEq(strategyManager.totalShares(),                 assetsToFund);
+        assertEq(strategyManager.totalPendingShares(),          sharesToRedeem);
+
+        assertEq(strategyManager.sharesOf(poolManager),        assetsToFund);
+        assertEq(strategyManager.pendingSharesOf(poolManager), sharesToRedeem);
+        assertEq(strategyManager.assetsOf(poolManager),        assetsToFund);
+
+        assertEq(MockERC20(asset).balanceOf(pool), 0);
+
+        /**********************************************************************************************************************************/
+        /*** Step 5: Process redemption                                                                                                 ***/
+        /**********************************************************************************************************************************/
+
+        vm.expectCall(underlyingStrategy, abi.encodeCall(MockStrategy.withdrawFromUnderlyingStrategy, (pool, assetsToFund, "")));
+
+        vm.expectEmit();
+        emit IMapleStrategyManager.RedemptionProcessed(poolManager, sharesToRedeem, assetsToFund);
+
+        vm.prank(liquidityBot);
+        strategyManager.processRedemption(poolManager, sharesToRedeem, "");
+
+        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.poolManagerCapOf(poolManager), 0);
+        assertEq(strategyManager.assetsUnderManagement(),       0);
+        assertEq(strategyManager.availableToWithdraw(),         0);
+        assertEq(strategyManager.totalShares(),                 0);
+        assertEq(strategyManager.totalPendingShares(),          0);
+
+        assertEq(strategyManager.sharesOf(poolManager),        0);
+        assertEq(strategyManager.pendingSharesOf(poolManager), 0);
+        assertEq(strategyManager.assetsOf(poolManager),        0);
+
+        assertEq(MockERC20(asset).balanceOf(pool), assetsToFund);
+    }
+
+    function test_processRedemption_success_afterPoolManagerCapLowered() external {
+        uint256 assetsToFund   = 100;
+        uint256 cap            = 50;
+        uint256 sharesToRedeem = 50;
+
+        strategyManager.__setTotalCap(type(uint256).max);
+
+        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.poolManagerCapOf(poolManager), 0);
+        assertEq(strategyManager.assetsUnderManagement(),       0);
+        assertEq(strategyManager.availableToWithdraw(),         0);
+        assertEq(strategyManager.totalShares(),                 0);
+        assertEq(strategyManager.totalPendingShares(),          0);
+
+        assertEq(strategyManager.sharesOf(poolManager),        0);
+        assertEq(strategyManager.pendingSharesOf(poolManager), 0);
+        assertEq(strategyManager.assetsOf(poolManager),        0);
+
+        assertEq(MockERC20(asset).balanceOf(pool), 0);
+
+        /**********************************************************************************************************************************/
+        /*** Step 1: Set pool manager cap                                                                                               ***/
+        /**********************************************************************************************************************************/
+
+        setPoolManagerCap(poolManager, type(uint256).max);
+
+        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.poolManagerCapOf(poolManager), type(uint256).max);
+        assertEq(strategyManager.assetsUnderManagement(),       0);
+        assertEq(strategyManager.availableToWithdraw(),         0);
+        assertEq(strategyManager.totalShares(),                 0);
+        assertEq(strategyManager.totalPendingShares(),          0);
+
+        assertEq(strategyManager.sharesOf(poolManager),        0);
+        assertEq(strategyManager.pendingSharesOf(poolManager), 0);
+        assertEq(strategyManager.assetsOf(poolManager),        0);
+
+        assertEq(MockERC20(asset).balanceOf(pool), 0);
+
+        /**********************************************************************************************************************************/
+        /*** Step 2: Fund strategy manager                                                                                              ***/
+        /**********************************************************************************************************************************/
+
+        MockStrategy(underlyingStrategy).__setFundUnderlyingStrategyReturn(assetsToFund);
+
+        vm.prank(liquidityBot);
+        strategyManager.fundStrategyManager(poolManager, assetsToFund, "");
+
+        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.poolManagerCapOf(poolManager), type(uint256).max);
+        assertEq(strategyManager.assetsUnderManagement(),       assetsToFund);
+        assertEq(strategyManager.availableToWithdraw(),         assetsToFund);
+        assertEq(strategyManager.totalShares(),                 assetsToFund);
+        assertEq(strategyManager.totalPendingShares(),          0);
+
+        assertEq(strategyManager.sharesOf(poolManager),        assetsToFund);
+        assertEq(strategyManager.pendingSharesOf(poolManager), 0);
+        assertEq(strategyManager.assetsOf(poolManager),        assetsToFund);
+
+        assertEq(MockERC20(asset).balanceOf(pool), 0);
+
+        /**********************************************************************************************************************************/
+        /*** Step 3: Lower pool manager cap                                                                                             ***/
+        /**********************************************************************************************************************************/
+
+        setPoolManagerCap(poolManager, cap);
+
+        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.poolManagerCapOf(poolManager), cap);
+        assertEq(strategyManager.assetsUnderManagement(),       assetsToFund);
+        assertEq(strategyManager.availableToWithdraw(),         assetsToFund);
+        assertEq(strategyManager.totalShares(),                 assetsToFund);
+        assertEq(strategyManager.totalPendingShares(),          0);
+
+        assertEq(strategyManager.sharesOf(poolManager),        assetsToFund);
+        assertEq(strategyManager.pendingSharesOf(poolManager), 0);
+        assertEq(strategyManager.assetsOf(poolManager),        assetsToFund);
+
+        assertEq(MockERC20(asset).balanceOf(pool), 0);
+
+        /**********************************************************************************************************************************/
+        /*** Step 4: Request redemption                                                                                                 ***/
+        /**********************************************************************************************************************************/
+
+        vm.prank(liquidityBot);
+        strategyManager.requestRedeem(poolManager, sharesToRedeem);
+
+        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.poolManagerCapOf(poolManager), cap);
+        assertEq(strategyManager.assetsUnderManagement(),       assetsToFund);
+        assertEq(strategyManager.availableToWithdraw(),         assetsToFund);
+        assertEq(strategyManager.totalShares(),                 assetsToFund);
+        assertEq(strategyManager.totalPendingShares(),          sharesToRedeem);
+
+        assertEq(strategyManager.sharesOf(poolManager),        assetsToFund);
+        assertEq(strategyManager.pendingSharesOf(poolManager), sharesToRedeem);
+        assertEq(strategyManager.assetsOf(poolManager),        assetsToFund);
+
+        assertEq(MockERC20(asset).balanceOf(pool), 0);
+
+        /**********************************************************************************************************************************/
+        /*** Step 5: Process redemption                                                                                                 ***/
+        /**********************************************************************************************************************************/
+
+        vm.expectCall(underlyingStrategy, abi.encodeCall(MockStrategy.withdrawFromUnderlyingStrategy, (pool, sharesToRedeem, "")));
+
+        vm.expectEmit();
+        emit IMapleStrategyManager.RedemptionProcessed(poolManager, sharesToRedeem, sharesToRedeem);
+
+        vm.prank(liquidityBot);
+        strategyManager.processRedemption(poolManager, sharesToRedeem, "");
+
+        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.poolManagerCapOf(poolManager), cap);
+        assertEq(strategyManager.assetsUnderManagement(),       assetsToFund - sharesToRedeem);
+        assertEq(strategyManager.availableToWithdraw(),         assetsToFund - sharesToRedeem);
+        assertEq(strategyManager.totalShares(),                 assetsToFund - sharesToRedeem);
+        assertEq(strategyManager.totalPendingShares(),          0);
+
+        assertEq(strategyManager.sharesOf(poolManager),        assetsToFund - sharesToRedeem);
+        assertEq(strategyManager.pendingSharesOf(poolManager), 0);
+        assertEq(strategyManager.assetsOf(poolManager),        assetsToFund - sharesToRedeem);
+
+        assertEq(MockERC20(asset).balanceOf(pool), sharesToRedeem);
     }
 
     function test_processRedemption_success_multiplePoolManagers() external {

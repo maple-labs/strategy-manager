@@ -10,10 +10,6 @@ contract MapleStrategyManagerHarness is MapleStrategyManager {
         _locked = locked_;
     }
 
-    function __setPoolCap(address poolManager_, uint256 poolCap_) external {
-        poolCap[poolManager_] = poolCap_;
-    }
-
     function __setPendingSharesOf(address poolManager_, uint256 pendingSharesOf_) external {
         pendingSharesOf[poolManager_] = pendingSharesOf_;
     }

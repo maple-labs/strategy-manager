@@ -27,7 +27,7 @@ contract CancelRedemptionFailureTests is TestBase {
     }
 
     function test_cancelRedemption_revert_notAuthorized() external {
-        vm.expectRevert("MSM:NOT_AUTHORIZED");
+        vm.expectRevert("MSM:NOT_OPERATOR");
         strategyManager.cancelRedemption(poolManager, 1);
     }
 

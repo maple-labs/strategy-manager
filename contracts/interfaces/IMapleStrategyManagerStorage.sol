@@ -7,11 +7,11 @@ pragma solidity ^0.8.0;
 interface IMapleStrategyManagerStorage {
 
     /**
-     *  @dev    Returns the per-pool deposit cap (in assets) for a given pool manager.
-     *  @param  poolManager Address of the pool manager.
-     *  @return poolCap     The maximum amount of assets the pool manager is authorized to deposit.
+     *  @dev    Returns the per-pool-manager maximum asset position for a given pool manager.
+     *  @param  poolManager      Address of the pool manager.
+     *  @return poolManagerCapOf The maximum asset position the pool manager is authorized to hold.
      */
-    function poolCap(address poolManager) external view returns (uint256 poolCap);
+    function poolManagerCapOf(address poolManager) external view returns (uint256 poolManagerCapOf);
 
     /**
      *  @dev    Returns the number of pending redemption shares held by a given pool manager.

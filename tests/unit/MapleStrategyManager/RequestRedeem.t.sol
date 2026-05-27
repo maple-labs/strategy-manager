@@ -32,7 +32,7 @@ contract RequestRedeemFailureTests is TestBase {
     }
 
     function test_requestRedeem_revert_notAuthorized() external {
-        vm.expectRevert("MSM:NOT_AUTHORIZED");
+        vm.expectRevert("MSM:NOT_OPERATOR");
         strategyManager.requestRedeem(poolManager, 1);
     }
 

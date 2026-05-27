@@ -15,6 +15,13 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     /**************************************************************************************************************************************/
 
     /**
+     *  @dev   Emitted when a pool manager's maximum asset position is set.
+     *  @param poolManager Address of the pool manager whose cap was set.
+     *  @param cap         The maximum asset position the pool manager is authorized to hold.
+     */
+    event PoolManagerCapSet(address indexed poolManager, uint256 cap);
+
+    /**
      *  @dev   Emitted when a pending redemption is cancelled for a pool manager.
      *  @param poolManager     Address of the pool manager whose pending shares were reduced.
      *  @param sharesCancelled Number of pending shares cancelled.
@@ -51,7 +58,7 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     );
 
     /**************************************************************************************************************************************/
-    /*** State-Changing Functions                                                                                                       ***/
+    /*** Liquidity Management Functions                                                                                                ***/
     /**************************************************************************************************************************************/
 
     /**
@@ -85,6 +92,17 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
      *  @param shares      Number of shares to queue for redemption.
      */
     function requestRedeem(address poolManager, uint256 shares) external;
+
+    /**************************************************************************************************************************************/
+    /*** Administrative Functions                                                                                                       ***/
+    /**************************************************************************************************************************************/
+
+    /**
+     *  @dev   Sets the maximum asset position a pool manager can have in the strategy manager.
+     *  @param poolManager Address of the pool manager whose cap is being set.
+     *  @param cap         Maximum asset position the pool manager can have in the strategy manager.
+     */
+    function setPoolManagerCap(address poolManager, uint256 cap) external;
 
     /**************************************************************************************************************************************/
     /*** View Functions                                                                                                                 ***/

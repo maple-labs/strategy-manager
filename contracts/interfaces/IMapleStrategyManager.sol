@@ -44,6 +44,17 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     event RedemptionRequested(address indexed poolManager, uint256 sharesRequested);
 
     /**
+     *  @dev   Emitted when the strategy manager's maximum total asset position is set.
+     *  @param cap The maximum total asset position the strategy manager is authorized to hold.
+     */
+    event StrategyLiquidityCapSet(uint256 cap);
+
+    /**
+     *  @dev Emitted when the strategy manager configuration is marked as complete.
+     */
+    event StrategyManagerConfigurationComplete();
+
+    /**
      *  @dev   Emitted when a pool manager funds the strategy manager.
      *  @param poolManager     Address of the pool manager that received shares.
      *  @param assetsIn        Amount of assets pulled from the pool.
@@ -56,6 +67,15 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
         uint256 assetsDeposited,
         uint256 sharesMinted
     );
+
+    /**************************************************************************************************************************************/
+    /*** Initial Configuration Functions                                                                                                ***/
+    /**************************************************************************************************************************************/
+
+    /**
+     *  @dev Complete the configuration.
+     */
+    function completeConfiguration() external;
 
     /**************************************************************************************************************************************/
     /*** Liquidity Management Functions                                                                                                ***/
@@ -103,6 +123,12 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
      *  @param cap         Maximum asset position the pool manager can have in the strategy manager.
      */
     function setPoolManagerCap(address poolManager, uint256 cap) external;
+
+    /**
+     *  @dev   Sets the maximum total asset position the strategy manager can have.
+     *  @param cap Maximum total asset position the strategy manager can have.
+     */
+    function setStrategyLiquidityCap(uint256 cap) external;
 
     /**************************************************************************************************************************************/
     /*** View Functions                                                                                                                 ***/

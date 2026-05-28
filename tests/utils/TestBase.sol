@@ -76,6 +76,8 @@ contract TestBase is Test {
         strategyManager = MapleStrategyManagerHarness(factory.createInstance(abi.encode(params), "DEFAULT"));
 
         MockGlobals(globals).__setStrategyDelegate(address(strategyManager), strategyDelegate);
+
+        strategyManager.completeConfiguration();
     }
 
     function setStrategyManagerState(uint256 aum_, uint256 totalShares_) internal {
@@ -88,6 +90,11 @@ contract TestBase is Test {
     function setPoolManagerCap(address poolManager_, uint256 cap_) internal {
         vm.prank(strategyDelegate);
         strategyManager.setPoolManagerCap(poolManager_, cap_);
+    }
+
+    function setStrategyLiquidityCap(uint256 cap_) internal {
+        vm.prank(strategyDelegate);
+        strategyManager.setStrategyLiquidityCap(cap_);
     }
 
 }

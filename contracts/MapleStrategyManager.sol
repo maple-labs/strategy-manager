@@ -14,6 +14,7 @@ import {
 
 import { MapleStrategyManagerStorage } from "./MapleStrategyManagerStorage.sol";
 
+// TODO: Consider ACL during strategy manager deployment
 contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStorage, MapleProxiedInternals {
 
     /**************************************************************************************************************************************/
@@ -46,8 +47,27 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         _;
     }
 
+    modifier onlyAdminOrNotConfigured() {
+        address globals_ = globals();
+
+        require(
+            !configured ||
+            msg.sender == IGlobalsLike(globals_).strategyDelegateOf(address(this)) ||
+            msg.sender == IGlobalsLike(globals_).operationalAdmin(),
+            "MSM:NOT_ADMIN_OR_NOT_CONFIGURED"
+        );
+
+        _;
+    }
+
     modifier onlyFactory() {
         require(msg.sender == _factory(), "MSM:NOT_FACTORY");
+
+        _;
+    }
+
+    modifier onlyIfNotConfigured() {
+        require(!configured, "MSM:ALREADY_CONFIGURED");
 
         _;
     }
@@ -100,6 +120,17 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     }
 
     /**************************************************************************************************************************************/
+    /*** Initial Configuration Functions                                                                                                ***/
+    /**************************************************************************************************************************************/
+
+    // NOTE: This function is always called atomically during the deployment process so a DoS attack is not possible.
+    function completeConfiguration() external override whenProtocolNotPaused onlyIfNotConfigured {
+        configured = true;
+
+        emit StrategyManagerConfigurationComplete();
+    }
+
+    /**************************************************************************************************************************************/
     /*** Liquidity Management Functions                                                                                                ***/
     /**************************************************************************************************************************************/
 
@@ -140,7 +171,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         totalShares            += sharesMinted_;
 
         require(assetsOf(poolManager_)  <= poolManagerCapOf[poolManager_], "MSM:FSM:POOL_MANAGER_CAP");
-        require(assetsUnderManagement() <= totalCap,                       "MSM:FSM:TOTAL_CAP");
+        require(assetsUnderManagement() <= strategyLiquidityCap,           "MSM:FSM:STRATEGY_LIQUIDITY_CAP");
 
         emit StrategyManagerFunded(poolManager_, assetsIn_, assetsDeposited_, sharesMinted_);
     }
@@ -207,6 +238,14 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         poolManagerCapOf[poolManager_] = cap_;
 
         emit PoolManagerCapSet(poolManager_, cap_);
+    }
+
+    function setStrategyLiquidityCap(uint256 cap_) external override whenProtocolNotPaused onlyAdminOrNotConfigured {
+        require(strategyLiquidityCap != cap_, "MSM:SSC:NO_CHANGE");
+
+        strategyLiquidityCap = cap_;
+
+        emit StrategyLiquidityCapSet(cap_);
     }
 
     /**************************************************************************************************************************************/

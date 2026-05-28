@@ -7,6 +7,12 @@ pragma solidity ^0.8.0;
 interface IMapleStrategyManagerStorage {
 
     /**
+     *  @dev    Returns whether or not the strategy manager is configured.
+     *  @return configured True if the strategy manager is configured.
+     */
+    function configured() external view returns (bool configured);
+
+    /**
      *  @dev    Returns the per-pool-manager maximum asset position for a given pool manager.
      *  @param  poolManager      Address of the pool manager.
      *  @return poolManagerCapOf The maximum asset position the pool manager is authorized to hold.
@@ -28,10 +34,10 @@ interface IMapleStrategyManagerStorage {
     function sharesOf(address poolManager) external view returns (uint256 sharesOf);
 
     /**
-     *  @dev    Returns the total deposit cap (in assets) across all pool managers.
-     *  @return totalCap The maximum total assets the strategy manager will accept.
+     *  @dev    Returns the maximum exposure to the strategy.
+     *  @return strategyLiquidityCap The maximum total asset position the strategy manager is authorized to hold.
      */
-    function totalCap() external view returns (uint256 totalCap);
+    function strategyLiquidityCap() external view returns (uint256 strategyLiquidityCap);
 
     /**
      *  @dev    Returns the total number of pending redemption shares across all pool managers.

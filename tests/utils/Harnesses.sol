@@ -6,6 +6,10 @@ import { MapleStrategyManagerInitializer } from "../../contracts/MapleStrategyMa
 
 contract MapleStrategyManagerHarness is MapleStrategyManager {
 
+    function __setConfigured(bool configured_) external {
+        configured = configured_;
+    }
+
     function __setLocked(uint256 locked_) external {
         _locked = locked_;
     }
@@ -16,10 +20,6 @@ contract MapleStrategyManagerHarness is MapleStrategyManager {
 
     function __setSharesOf(address poolManager_, uint256 sharesOf_) external {
         sharesOf[poolManager_] = sharesOf_;
-    }
-
-    function __setTotalCap(uint256 totalCap_) external {
-        totalCap = totalCap_;
     }
 
     function __setTotalPendingShares(uint256 totalPendingShares_) external {

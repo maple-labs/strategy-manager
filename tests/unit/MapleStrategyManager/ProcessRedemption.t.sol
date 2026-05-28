@@ -697,9 +697,9 @@ contract ProcessRedemptionSuccessTests is TestBase {
         uint256 assetsToFund   = 100;
         uint256 sharesToRedeem = 100;
 
-        strategyManager.__setTotalCap(type(uint256).max);
+        setStrategyLiquidityCap(type(uint256).max);
 
-        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.strategyLiquidityCap(),        type(uint256).max);
         assertEq(strategyManager.poolManagerCapOf(poolManager), 0);
         assertEq(strategyManager.assetsUnderManagement(),       0);
         assertEq(strategyManager.availableToWithdraw(),         0);
@@ -718,7 +718,7 @@ contract ProcessRedemptionSuccessTests is TestBase {
 
         setPoolManagerCap(poolManager, type(uint256).max);
 
-        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.strategyLiquidityCap(),        type(uint256).max);
         assertEq(strategyManager.poolManagerCapOf(poolManager), type(uint256).max);
         assertEq(strategyManager.assetsUnderManagement(),       0);
         assertEq(strategyManager.availableToWithdraw(),         0);
@@ -740,7 +740,7 @@ contract ProcessRedemptionSuccessTests is TestBase {
         vm.prank(liquidityBot);
         strategyManager.fundStrategyManager(poolManager, assetsToFund, "");
 
-        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.strategyLiquidityCap(),        type(uint256).max);
         assertEq(strategyManager.poolManagerCapOf(poolManager), type(uint256).max);
         assertEq(strategyManager.assetsUnderManagement(),       assetsToFund);
         assertEq(strategyManager.availableToWithdraw(),         assetsToFund);
@@ -759,7 +759,7 @@ contract ProcessRedemptionSuccessTests is TestBase {
 
         setPoolManagerCap(poolManager, 0);
 
-        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.strategyLiquidityCap(),        type(uint256).max);
         assertEq(strategyManager.poolManagerCapOf(poolManager), 0);
         assertEq(strategyManager.assetsUnderManagement(),       assetsToFund);
         assertEq(strategyManager.availableToWithdraw(),         assetsToFund);
@@ -779,7 +779,7 @@ contract ProcessRedemptionSuccessTests is TestBase {
         vm.prank(liquidityBot);
         strategyManager.requestRedeem(poolManager, sharesToRedeem);
 
-        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.strategyLiquidityCap(),        type(uint256).max);
         assertEq(strategyManager.poolManagerCapOf(poolManager), 0);
         assertEq(strategyManager.assetsUnderManagement(),       assetsToFund);
         assertEq(strategyManager.availableToWithdraw(),         assetsToFund);
@@ -804,7 +804,7 @@ contract ProcessRedemptionSuccessTests is TestBase {
         vm.prank(liquidityBot);
         strategyManager.processRedemption(poolManager, sharesToRedeem, "");
 
-        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.strategyLiquidityCap(),        type(uint256).max);
         assertEq(strategyManager.poolManagerCapOf(poolManager), 0);
         assertEq(strategyManager.assetsUnderManagement(),       0);
         assertEq(strategyManager.availableToWithdraw(),         0);
@@ -823,9 +823,9 @@ contract ProcessRedemptionSuccessTests is TestBase {
         uint256 cap            = 50;
         uint256 sharesToRedeem = 50;
 
-        strategyManager.__setTotalCap(type(uint256).max);
+        setStrategyLiquidityCap(type(uint256).max);
 
-        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.strategyLiquidityCap(),        type(uint256).max);
         assertEq(strategyManager.poolManagerCapOf(poolManager), 0);
         assertEq(strategyManager.assetsUnderManagement(),       0);
         assertEq(strategyManager.availableToWithdraw(),         0);
@@ -844,7 +844,7 @@ contract ProcessRedemptionSuccessTests is TestBase {
 
         setPoolManagerCap(poolManager, type(uint256).max);
 
-        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.strategyLiquidityCap(),        type(uint256).max);
         assertEq(strategyManager.poolManagerCapOf(poolManager), type(uint256).max);
         assertEq(strategyManager.assetsUnderManagement(),       0);
         assertEq(strategyManager.availableToWithdraw(),         0);
@@ -866,7 +866,7 @@ contract ProcessRedemptionSuccessTests is TestBase {
         vm.prank(liquidityBot);
         strategyManager.fundStrategyManager(poolManager, assetsToFund, "");
 
-        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.strategyLiquidityCap(),        type(uint256).max);
         assertEq(strategyManager.poolManagerCapOf(poolManager), type(uint256).max);
         assertEq(strategyManager.assetsUnderManagement(),       assetsToFund);
         assertEq(strategyManager.availableToWithdraw(),         assetsToFund);
@@ -885,7 +885,7 @@ contract ProcessRedemptionSuccessTests is TestBase {
 
         setPoolManagerCap(poolManager, cap);
 
-        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.strategyLiquidityCap(),        type(uint256).max);
         assertEq(strategyManager.poolManagerCapOf(poolManager), cap);
         assertEq(strategyManager.assetsUnderManagement(),       assetsToFund);
         assertEq(strategyManager.availableToWithdraw(),         assetsToFund);
@@ -905,7 +905,7 @@ contract ProcessRedemptionSuccessTests is TestBase {
         vm.prank(liquidityBot);
         strategyManager.requestRedeem(poolManager, sharesToRedeem);
 
-        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.strategyLiquidityCap(),        type(uint256).max);
         assertEq(strategyManager.poolManagerCapOf(poolManager), cap);
         assertEq(strategyManager.assetsUnderManagement(),       assetsToFund);
         assertEq(strategyManager.availableToWithdraw(),         assetsToFund);
@@ -930,7 +930,7 @@ contract ProcessRedemptionSuccessTests is TestBase {
         vm.prank(liquidityBot);
         strategyManager.processRedemption(poolManager, sharesToRedeem, "");
 
-        assertEq(strategyManager.totalCap(),                    type(uint256).max);
+        assertEq(strategyManager.strategyLiquidityCap(),        type(uint256).max);
         assertEq(strategyManager.poolManagerCapOf(poolManager), cap);
         assertEq(strategyManager.assetsUnderManagement(),       assetsToFund - sharesToRedeem);
         assertEq(strategyManager.availableToWithdraw(),         assetsToFund - sharesToRedeem);

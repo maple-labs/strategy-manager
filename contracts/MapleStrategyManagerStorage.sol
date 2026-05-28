@@ -9,7 +9,9 @@ contract MapleStrategyManagerStorage is IMapleStrategyManagerStorage {
 
     address public override underlyingStrategy;
 
-    uint256 public override totalCap;
+    bool public override configured;
+
+    uint256 public override strategyLiquidityCap;
     uint256 public override totalPendingShares;  // TODO: Do we need this slot?
     uint256 public override totalShares;
 

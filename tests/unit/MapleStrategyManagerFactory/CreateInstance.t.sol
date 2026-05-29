@@ -54,6 +54,7 @@ contract CreateInstanceTests is TestBase {
         assertEq(strategyManager.factory(),            address(factory));
         assertEq(strategyManager.implementation(),     implementation);
         assertEq(strategyManager.underlyingStrategy(), underlyingStrategy);
+        assertEq(strategyManager.active(),             false);
         assertEq(strategyManager.locked(),             1);
 
         assertEq(factory.isInstance(expectedInstance), true);

@@ -39,6 +39,14 @@ contract FundStrategyManagerFailureTests is TestBase {
         strategyManager.fundStrategyManager(poolManager, 1, "");
     }
 
+    function test_fundStrategyManager_revert_notActive() external {
+        strategyManager.__setActive(false);
+
+        vm.prank(liquidityBot);
+        vm.expectRevert("MSM:FSM:NOT_ACTIVE");
+        strategyManager.fundStrategyManager(poolManager, 1, "");
+    }
+
     function test_fundStrategyManager_revert_zeroAssets() external {
         vm.prank(liquidityBot);
         vm.expectRevert("MSM:FSM:ZERO_ASSETS");

@@ -7,6 +7,12 @@ pragma solidity ^0.8.0;
 interface IMapleStrategyManagerStorage {
 
     /**
+     *  @dev    Returns whether or not the strategy manager is active.
+     *  @return active True if the strategy manager is active.
+     */
+    function active() external view returns (bool active);
+
+    /**
      *  @dev    Returns whether or not the strategy manager is configured.
      *  @return configured True if the strategy manager is configured.
      */

@@ -6,6 +6,10 @@ import { MapleStrategyManagerInitializer } from "../../contracts/MapleStrategyMa
 
 contract MapleStrategyManagerHarness is MapleStrategyManager {
 
+    function __setActive(bool active_) external {
+        active = active_;
+    }
+
     function __setConfigured(bool configured_) external {
         configured = configured_;
     }

@@ -131,6 +131,18 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     }
 
     /**************************************************************************************************************************************/
+    /*** Globals Admin Functions                                                                                                        ***/
+    /**************************************************************************************************************************************/
+
+    function setActive(bool active_) external override whenProtocolNotPaused {
+        require(msg.sender == globals(), "MSM:SA:NOT_GLOBALS");
+
+        active = active_;
+
+        emit SetAsActive(active_);
+    }
+
+    /**************************************************************************************************************************************/
     /*** Liquidity Management Functions                                                                                                ***/
     /**************************************************************************************************************************************/
 
@@ -148,6 +160,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     function fundStrategyManager(address poolManager_, uint256 assetsIn_, bytes calldata data_)
         external override whenProtocolNotPaused nonReentrant onlyOperator
     {
+        require(active,         "MSM:FSM:NOT_ACTIVE");
         require(assetsIn_ != 0, "MSM:FSM:ZERO_ASSETS");
 
         address factory_ = IPoolManagerLike(poolManager_).factory();

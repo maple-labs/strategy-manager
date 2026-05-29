@@ -9,6 +9,7 @@ contract MapleStrategyManagerStorage is IMapleStrategyManagerStorage {
 
     address public override underlyingStrategy;
 
+    bool public override active;
     bool public override configured;
 
     uint256 public override strategyLiquidityCap;

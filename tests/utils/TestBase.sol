@@ -78,6 +78,7 @@ contract TestBase is Test {
         MockGlobals(globals).__setStrategyDelegate(address(strategyManager), strategyDelegate);
 
         strategyManager.completeConfiguration();
+        strategyManager.__setActive(true);
     }
 
     function setStrategyManagerState(uint256 aum_, uint256 totalShares_) internal {

@@ -18,6 +18,7 @@ contract InitializeTests is TestBase {
         proxy.__initialize(params);
 
         assertEq(proxy.underlyingStrategy(), underlyingStrategy);
+        assertEq(proxy.active(),             false);
     }
 
 }

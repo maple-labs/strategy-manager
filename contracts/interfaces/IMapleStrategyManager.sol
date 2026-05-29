@@ -44,6 +44,12 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     event RedemptionRequested(address indexed poolManager, uint256 sharesRequested);
 
     /**
+     *  @dev   Emitted when the strategy manager is set to be active or inactive.
+     *  @param active Whether the strategy manager is active.
+     */
+    event SetAsActive(bool active);
+
+    /**
      *  @dev   Emitted when the strategy manager's maximum total asset position is set.
      *  @param cap The maximum total asset position the strategy manager is authorized to hold.
      */
@@ -116,6 +122,12 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     /**************************************************************************************************************************************/
     /*** Administrative Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
+
+    /**
+     *  @dev   Sets the strategy manager to be active or inactive.
+     *  @param active Whether the strategy manager is active.
+     */
+    function setActive(bool active) external;
 
     /**
      *  @dev   Sets the maximum asset position a pool manager can have in the strategy manager.

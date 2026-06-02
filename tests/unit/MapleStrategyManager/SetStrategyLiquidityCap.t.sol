@@ -18,7 +18,7 @@ contract SetStrategyLiquidityCapFailureTests is TestBase {
     }
 
     function test_setStrategyLiquidityCap_revert_notAuthorized() external {
-        vm.expectRevert("MSM:NOT_ADMIN_OR_NOT_CONFIGURED");
+        vm.expectRevert("MSM:NOT_ADMIN");
         strategyManager.setStrategyLiquidityCap(1);
     }
 

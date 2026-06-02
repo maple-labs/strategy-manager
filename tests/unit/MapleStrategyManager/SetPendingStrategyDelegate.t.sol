@@ -22,7 +22,7 @@ contract SetPendingStrategyDelegateFailureTests is TestBase {
     }
 
     function test_setPendingStrategyDelegate_revert_notAuthorized() external {
-        vm.expectRevert("MSM:NOT_SD_OR_GOV_OR_OA");
+        vm.expectRevert("MSM:NOT_ADMIN");
         strategyManager.setPendingStrategyDelegate(newStrategyDelegate);
     }
 
@@ -32,20 +32,6 @@ contract SetPendingStrategyDelegateSuccessTests is TestBase {
 
     address newStrategyDelegate  = makeAddr("newStrategyDelegate");
     address nextStrategyDelegate = makeAddr("nextStrategyDelegate");
-
-    function test_setPendingStrategyDelegate_success_calledByGovernor() external {
-        assertEq(strategyManager.strategyDelegate(),        strategyDelegate);
-        assertEq(strategyManager.pendingStrategyDelegate(), address(0));
-
-        vm.expectEmit(address(strategyManager));
-        emit IMapleStrategyManager.PendingStrategyDelegateSet(newStrategyDelegate);
-
-        vm.prank(governor);
-        strategyManager.setPendingStrategyDelegate(newStrategyDelegate);
-
-        assertEq(strategyManager.strategyDelegate(),        strategyDelegate);
-        assertEq(strategyManager.pendingStrategyDelegate(), newStrategyDelegate);
-    }
 
     function test_setPendingStrategyDelegate_success_calledByOperationalAdmin() external {
         assertEq(strategyManager.strategyDelegate(),        strategyDelegate);

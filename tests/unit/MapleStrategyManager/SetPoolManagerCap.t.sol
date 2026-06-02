@@ -34,6 +34,18 @@ contract SetPoolManagerCapFailureTests is TestBase {
         setPoolManagerCap(poolManager, 0);
     }
 
+    function test_setPoolManagerCap_revert_noChange_zeroWhenNotConfigured() external {
+        address otherPoolManager = address(new MockPoolManager());
+
+        strategyManager.__setConfigured(false);
+
+        assertEq(strategyManager.configured(),                       false);
+        assertEq(strategyManager.poolManagerCapOf(otherPoolManager), 0);
+
+        vm.expectRevert("MSM:SPMC:NO_CHANGE");
+        strategyManager.setPoolManagerCap(otherPoolManager, 0);
+    }
+
     function test_setPoolManagerCap_revert_noChange() external {
         uint256 cap = 1_000;
 
@@ -52,6 +64,19 @@ contract SetPoolManagerCapFailureTests is TestBase {
 
         vm.expectRevert("MSM:SPMC:INVALID_PM_FACTORY");
         setPoolManagerCap(otherPoolManager, 1);
+    }
+
+    function test_setPoolManagerCap_revert_invalidPMFactoryWhenNotConfigured() external {
+        address otherFactory     = address(new MockPoolManagerFactory());
+        address otherPoolManager = address(new MockPoolManager());
+
+        strategyManager.__setConfigured(false);
+
+        MockPoolManager(otherPoolManager).__setFactory(otherFactory);
+        MockPoolManagerFactory(otherFactory).__setIsInstance(otherPoolManager, true);
+
+        vm.expectRevert("MSM:SPMC:INVALID_PM_FACTORY");
+        strategyManager.setPoolManagerCap(otherPoolManager, 1);
     }
 
     function test_setPoolManagerCap_revert_nonZeroUpdate_invalidPMFactory() external {
@@ -77,6 +102,17 @@ contract SetPoolManagerCapFailureTests is TestBase {
 
         vm.expectRevert("MSM:SPMC:INVALID_PM");
         setPoolManagerCap(otherPoolManager, 1);
+    }
+
+    function test_setPoolManagerCap_revert_invalidPMWhenNotConfigured() external {
+        address otherPoolManager = address(new MockPoolManager());
+
+        strategyManager.__setConfigured(false);
+
+        MockPoolManager(otherPoolManager).__setFactory(poolManagerFactory);
+
+        vm.expectRevert("MSM:SPMC:INVALID_PM");
+        strategyManager.setPoolManagerCap(otherPoolManager, 1);
     }
 
     function test_setPoolManagerCap_revert_nonZeroUpdate_invalidPM() external {
@@ -124,6 +160,57 @@ contract SetPoolManagerCapSuccessTests is TestBase {
         strategyManager.setPoolManagerCap(poolManager, cap);
 
         assertEq(strategyManager.poolManagerCapOf(poolManager), cap);
+    }
+
+    function test_setPoolManagerCap_success_calledByNonAdminWhenNotConfigured() external {
+        uint256 cap = 1_000;
+
+        strategyManager.__setConfigured(false);
+
+        assertEq(strategyManager.configured(),                  false);
+        assertEq(strategyManager.poolManagerCapOf(poolManager), 0);
+
+        vm.expectEmit();
+        emit IMapleStrategyManager.PoolManagerCapSet(poolManager, cap);
+
+        strategyManager.setPoolManagerCap(poolManager, cap);
+
+        assertEq(strategyManager.configured(),                  false);
+        assertEq(strategyManager.poolManagerCapOf(poolManager), cap);
+    }
+
+    function test_setPoolManagerCap_success_calledByNonAdminWhenNotConfigured_thenAdminUpdatesAfterConfigured() external {
+        uint256 initialCap = 1_000;
+        uint256 updatedCap = 500;
+
+        strategyManager.__setConfigured(false);
+
+        assertEq(strategyManager.configured(),                  false);
+        assertEq(strategyManager.poolManagerCapOf(poolManager), 0);
+
+        vm.expectEmit();
+        emit IMapleStrategyManager.PoolManagerCapSet(poolManager, initialCap);
+
+        strategyManager.setPoolManagerCap(poolManager, initialCap);
+
+        assertEq(strategyManager.configured(),                  false);
+        assertEq(strategyManager.poolManagerCapOf(poolManager), initialCap);
+
+        vm.expectEmit();
+        emit IMapleStrategyManager.StrategyManagerConfigurationComplete();
+
+        strategyManager.completeConfiguration();
+
+        assertEq(strategyManager.configured(),                  true);
+        assertEq(strategyManager.poolManagerCapOf(poolManager), initialCap);
+
+        vm.expectEmit();
+        emit IMapleStrategyManager.PoolManagerCapSet(poolManager, updatedCap);
+
+        setPoolManagerCap(poolManager, updatedCap);
+
+        assertEq(strategyManager.configured(),                  true);
+        assertEq(strategyManager.poolManagerCapOf(poolManager), updatedCap);
     }
 
     function test_setPoolManagerCap_success_max_calledByStrategyDelegate() external {

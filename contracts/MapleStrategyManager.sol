@@ -35,39 +35,22 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         _locked = 1;
     }
 
-    modifier onlyAdmin() {
-        address globals_ = globals();
+    modifier onlyAdminsOrNotConfigured() {
+        if (configured) {
+            address globals_ = globals();
 
-        require(
-            msg.sender == strategyDelegate ||
-            msg.sender == IGlobalsLike(globals_).operationalAdmin(),
-            "MSM:NOT_ADMIN"
-        );
-
-        _;
-    }
-
-    modifier onlyAdminOrNotConfigured() {
-        address globals_ = globals();
-
-        require(
-            !configured ||
-            msg.sender == strategyDelegate ||
-            msg.sender == IGlobalsLike(globals_).operationalAdmin(),
-            "MSM:NOT_ADMIN_OR_NOT_CONFIGURED"
-        );
+            require(
+                msg.sender == strategyDelegate ||
+                msg.sender == IGlobalsLike(globals_).operationalAdmin(),
+                "MSM:NOT_ADMIN"
+            );
+        }
 
         _;
     }
 
     modifier onlyFactory() {
         require(msg.sender == _factory(), "MSM:NOT_FACTORY");
-
-        _;
-    }
-
-    modifier onlyIfNotConfigured() {
-        require(!configured, "MSM:ALREADY_CONFIGURED");
 
         _;
     }
@@ -85,27 +68,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         _;
     }
 
-    modifier onlyStrategyDelegate() {
-        require(msg.sender == strategyDelegate, "MSM:NOT_STRATEGY_DELEGATE");
-
-        _;
-    }
-
-    modifier onlyStrategyDelegateOrProtocolAdmins() {
-        address globals_ = globals();
-
-        require(
-            msg.sender == strategyDelegate ||
-            msg.sender == IGlobalsLike(globals_).governor() ||
-            msg.sender == IGlobalsLike(globals_).operationalAdmin(),
-            "MSM:NOT_SD_OR_GOV_OR_OA"
-        );
-
-        _;
-    }
-
-    // TODO: Should this be renamed to `whenNotPaused`?
-    modifier whenProtocolNotPaused() {
+    modifier whenNotPaused() {
         require(!IGlobalsLike(globals()).isFunctionPaused(msg.sig), "MSM:PAUSED");
 
         _;
@@ -115,15 +78,15 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /*** Proxy Functions                                                                                                                ***/
     /**************************************************************************************************************************************/
 
-    function migrate(address migrator_, bytes calldata arguments_) external override whenProtocolNotPaused onlyFactory {
+    function migrate(address migrator_, bytes calldata arguments_) external override whenNotPaused onlyFactory {
         require(_migrate(migrator_, arguments_), "MSM:M:FAILED");
     }
 
-    function setImplementation(address implementation_) external override whenProtocolNotPaused onlyFactory {
+    function setImplementation(address implementation_) external override whenNotPaused onlyFactory {
         _setImplementation(implementation_);
     }
 
-    function upgrade(uint256 version_, bytes calldata arguments_) external override whenProtocolNotPaused {
+    function upgrade(uint256 version_, bytes calldata arguments_) external override whenNotPaused {
         require(msg.sender == securityAdmin(), "MSM:U:NOT_AUTHORIZED");
 
         IProxyFactoryLike(_factory()).upgradeInstance(version_, arguments_);
@@ -136,7 +99,9 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /**************************************************************************************************************************************/
 
     // NOTE: This function is always called atomically during the deployment process so a DoS attack is not possible.
-    function completeConfiguration() external override whenProtocolNotPaused onlyIfNotConfigured {
+    function completeConfiguration() external override whenNotPaused {
+        require(!configured, "MSM:CC:ALREADY_CONFIGURED");
+
         configured = true;
 
         emit StrategyManagerConfigurationComplete();
@@ -146,7 +111,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /*** Globals Admin Functions                                                                                                        ***/
     /**************************************************************************************************************************************/
 
-    function setActive(bool active_) external override whenProtocolNotPaused {
+    function setActive(bool active_) external override whenNotPaused {
         require(msg.sender == globals(), "MSM:SA:NOT_GLOBALS");
 
         active = active_;
@@ -158,7 +123,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /*** Ownership Transfer Functions                                                                                                   ***/
     /**************************************************************************************************************************************/
 
-    function acceptStrategyDelegate() external override whenProtocolNotPaused {
+    function acceptStrategyDelegate() external override whenNotPaused {
         address pendingStrategyDelegate_ = pendingStrategyDelegate;
         address strategyDelegate_        = strategyDelegate;
 
@@ -173,7 +138,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     }
 
     function setPendingStrategyDelegate(address pendingStrategyDelegate_)
-        external override whenProtocolNotPaused onlyStrategyDelegateOrProtocolAdmins
+        external override whenNotPaused onlyAdminsOrNotConfigured
     {
         pendingStrategyDelegate = pendingStrategyDelegate_;
 
@@ -184,7 +149,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /*** Liquidity Management Functions                                                                                                ***/
     /**************************************************************************************************************************************/
 
-    function cancelRedemption(address poolManager_, uint256 shares_) external override whenProtocolNotPaused nonReentrant onlyOperator {
+    function cancelRedemption(address poolManager_, uint256 shares_) external override whenNotPaused nonReentrant onlyOperator {
         require(shares_ != 0,                             "MSM:CR:ZERO_SHARES");
         require(shares_ <= pendingSharesOf[poolManager_], "MSM:CR:INSUFFICIENT_SHARES");
 
@@ -196,7 +161,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
 
     // TODO: Consider adding minShares. What can go wrong if bot key gets compromised.
     function fundStrategyManager(address poolManager_, uint256 assetsIn_, bytes calldata data_)
-        external override whenProtocolNotPaused nonReentrant onlyOperator
+        external override whenNotPaused nonReentrant onlyOperator
     {
         require(active,         "MSM:FSM:NOT_ACTIVE");
         require(assetsIn_ != 0, "MSM:FSM:ZERO_ASSETS");
@@ -233,7 +198,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         uint256 shares_,
         bytes calldata data_
     )
-        external override whenProtocolNotPaused nonReentrant onlyOperator
+        external override whenNotPaused nonReentrant onlyOperator
     {
         require(shares_ != 0,                             "MSM:PR:ZERO_SHARES");
         require(shares_ <= pendingSharesOf[poolManager_], "MSM:PR:EXCEEDS_REQUESTED");
@@ -260,7 +225,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     }
 
     // TODO: Do we need to validate poolManager here?
-    function requestRedeem(address poolManager_, uint256 shares_) external override whenProtocolNotPaused nonReentrant onlyOperator {
+    function requestRedeem(address poolManager_, uint256 shares_) external override whenNotPaused nonReentrant onlyOperator {
         uint256 remainingShares_ = sharesOf[poolManager_] - pendingSharesOf[poolManager_];
 
         require(shares_ != 0,                "MSM:RR:ZERO_SHARES");
@@ -276,7 +241,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /*** Administrative Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
 
-    function setPoolManagerCap(address poolManager_, uint256 cap_) external override whenProtocolNotPaused onlyAdmin {
+    function setPoolManagerCap(address poolManager_, uint256 cap_) external override whenNotPaused onlyAdminsOrNotConfigured {
         require(poolManagerCapOf[poolManager_] != cap_, "MSM:SPMC:NO_CHANGE");
 
         if (cap_ != 0) {
@@ -291,7 +256,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         emit PoolManagerCapSet(poolManager_, cap_);
     }
 
-    function setStrategyLiquidityCap(uint256 cap_) external override whenProtocolNotPaused onlyAdminOrNotConfigured {
+    function setStrategyLiquidityCap(uint256 cap_) external override whenNotPaused onlyAdminsOrNotConfigured {
         require(strategyLiquidityCap != cap_, "MSM:SSC:NO_CHANGE");
 
         strategyLiquidityCap = cap_;

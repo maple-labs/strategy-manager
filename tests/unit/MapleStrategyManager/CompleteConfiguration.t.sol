@@ -20,7 +20,7 @@ contract CompleteConfigurationFailureTests is TestBase {
     function test_completeConfiguration_revert_alreadyConfigured() external {
         assertEq(strategyManager.configured(), true);
 
-        vm.expectRevert("MSM:ALREADY_CONFIGURED");
+        vm.expectRevert("MSM:CC:ALREADY_CONFIGURED");
         strategyManager.completeConfiguration();
     }
 

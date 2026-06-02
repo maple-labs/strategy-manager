@@ -132,15 +132,15 @@ contract MockERC20 {
 
 contract MockStrategy {
 
-    address public asset;
+    address public fundsAsset;
 
     uint256 public assetsUnderManagement;
     uint256 public availableToWithdraw;
 
     uint256 internal _fundReturn;
 
-    function __setAsset(address asset_) external {
-        asset = asset_;
+    function __setFundsAsset(address fundsAsset_) external {
+        fundsAsset = fundsAsset_;
     }
 
     function __setAvailableToWithdraw(uint256 availableToWithdraw_) external {
@@ -150,7 +150,7 @@ contract MockStrategy {
     function __setAssetsUnderManagement(uint256 assetsUnderManagement_) external {
         assetsUnderManagement = assetsUnderManagement_;
 
-        MockERC20(asset).__setBalance(address(this), assetsUnderManagement_);
+        MockERC20(fundsAsset).__setBalance(address(this), assetsUnderManagement_);
     }
 
     function __setFundUnderlyingStrategyReturn(uint256 fundReturn_) external {
@@ -163,14 +163,14 @@ contract MockStrategy {
         assetsUnderManagement += _fundReturn;
         availableToWithdraw   += _fundReturn;
 
-        MockERC20(asset).__mint(address(this), _fundReturn);
+        MockERC20(fundsAsset).__mint(address(this), _fundReturn);
     }
 
     function withdrawFromUnderlyingStrategy(address destination_, uint256 assets_, bytes calldata) external {
         assetsUnderManagement -= assets_;
         availableToWithdraw   -= assets_;
 
-        MockERC20(asset).transfer(destination_, assets_);
+        MockERC20(fundsAsset).transfer(destination_, assets_);
     }
 
 }

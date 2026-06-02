@@ -200,6 +200,13 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     function globals() external view returns (address globals);
 
     /**
+     *  @dev    Returns whether the given asset is supported by the strategy manager.
+     *  @param  asset       Address of the asset to query.
+     *  @return isSupported True if the strategy manager supports `asset`.
+     */
+    function isAssetSupported(address asset) external view returns (bool isSupported);
+
+    /**
      *  @dev    Returns the address of the security admin.
      *  @return securityAdmin Address of the security admin.
      */

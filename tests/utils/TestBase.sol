@@ -59,7 +59,7 @@ contract TestBase is Test {
         MockPoolManager(poolManager).__setPool(pool);
         MockPoolManagerFactory(poolManagerFactory).__setIsInstance(poolManager, true);
 
-        MockStrategy(underlyingStrategy).__setAsset(address(asset));
+        MockStrategy(underlyingStrategy).__setFundsAsset(address(asset));
 
         factory = new MapleStrategyManagerFactory(globals);
 

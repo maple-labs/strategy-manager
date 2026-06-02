@@ -292,6 +292,10 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         implementation_ = _implementation();
     }
 
+    function isAssetSupported(address asset_) external view override returns (bool isSupported_) {
+        isSupported_ = IUnderlyingStrategyLike(underlyingStrategy).fundsAsset() == asset_;
+    }
+
     function securityAdmin() public view override returns (address securityAdmin_) {
         securityAdmin_ = IGlobalsLike(globals()).securityAdmin();
     }

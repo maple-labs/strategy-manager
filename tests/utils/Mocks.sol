@@ -9,6 +9,7 @@ contract MockGlobals {
     address public operationalAdmin;
     address public securityAdmin;
 
+    bool public failTransferOwnedStrategyManager;
     bool public protocolPaused;
 
     mapping(address => bool) public canDeploy;
@@ -17,10 +18,16 @@ contract MockGlobals {
 
     mapping(bytes32 => mapping(address => bool)) public isInstanceOf;
 
+    mapping(address => bool) public isStrategyDelegate;
+
     mapping(address => address) public strategyDelegateOf;
 
     function __setCanDeploy(address caller_, bool canDeploy_) external {
         canDeploy[caller_] = canDeploy_;
+    }
+
+    function __setFailTransferOwnedStrategyManager(bool failTransferOwnedStrategyManager_) external {
+        failTransferOwnedStrategyManager = failTransferOwnedStrategyManager_;
     }
 
     function __setGovernor(address governor_) external {
@@ -33,6 +40,10 @@ contract MockGlobals {
 
     function __setIsInstanceOf(bytes32 instanceId_, address instance_, bool isInstance_) external {
         isInstanceOf[instanceId_][instance_] = isInstance_;
+    }
+
+    function __setIsStrategyDelegate(address account_, bool isStrategyDelegate_) external {
+        isStrategyDelegate[account_] = isStrategyDelegate_;
     }
 
     function __setOperationalAdmin(address operationalAdmin_) external {
@@ -49,6 +60,12 @@ contract MockGlobals {
 
     function __setStrategyDelegate(address strategyManager_, address strategyDelegate_) external {
         strategyDelegateOf[strategyManager_] = strategyDelegate_;
+    }
+
+    function transferOwnedStrategyManager(address, address toStrategyDelegate_) external {
+        require(!failTransferOwnedStrategyManager, "MG:TOSM:FAILED");
+
+        strategyDelegateOf[msg.sender] = toStrategyDelegate_;
     }
 
 }

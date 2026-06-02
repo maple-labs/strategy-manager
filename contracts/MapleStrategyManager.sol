@@ -39,7 +39,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         address globals_ = globals();
 
         require(
-            msg.sender == IGlobalsLike(globals_).strategyDelegateOf(address(this)) ||
+            msg.sender == strategyDelegate ||
             msg.sender == IGlobalsLike(globals_).operationalAdmin(),
             "MSM:NOT_ADMIN"
         );
@@ -52,7 +52,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
 
         require(
             !configured ||
-            msg.sender == IGlobalsLike(globals_).strategyDelegateOf(address(this)) ||
+            msg.sender == strategyDelegate ||
             msg.sender == IGlobalsLike(globals_).operationalAdmin(),
             "MSM:NOT_ADMIN_OR_NOT_CONFIGURED"
         );
@@ -78,16 +78,28 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         require(
             IGlobalsLike(globals_).isInstanceOf("LIQUIDITY_BOT",    msg.sender) ||
             IGlobalsLike(globals_).isInstanceOf("LIQUIDITY_ROUTER", msg.sender) ||
-            msg.sender == IGlobalsLike(globals_).strategyDelegateOf(address(this)),
+            msg.sender == strategyDelegate,
             "MSM:NOT_OPERATOR"
         );
 
         _;
     }
 
-    // TODO: Determine where the strategy delegate address will be retrieved from.
     modifier onlyStrategyDelegate() {
-        require(msg.sender == IGlobalsLike(globals()).strategyDelegateOf(address(this)), "MSM:NOT_STRATEGY_DELEGATE");
+        require(msg.sender == strategyDelegate, "MSM:NOT_STRATEGY_DELEGATE");
+
+        _;
+    }
+
+    modifier onlyStrategyDelegateOrProtocolAdmins() {
+        address globals_ = globals();
+
+        require(
+            msg.sender == strategyDelegate ||
+            msg.sender == IGlobalsLike(globals_).governor() ||
+            msg.sender == IGlobalsLike(globals_).operationalAdmin(),
+            "MSM:NOT_SD_OR_GOV_OR_OA"
+        );
 
         _;
     }
@@ -140,6 +152,32 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         active = active_;
 
         emit SetAsActive(active_);
+    }
+
+    /**************************************************************************************************************************************/
+    /*** Ownership Transfer Functions                                                                                                   ***/
+    /**************************************************************************************************************************************/
+
+    function acceptStrategyDelegate() external override whenProtocolNotPaused {
+        address pendingStrategyDelegate_ = pendingStrategyDelegate;
+        address strategyDelegate_        = strategyDelegate;
+
+        require(msg.sender == pendingStrategyDelegate_, "MSM:ASD:NOT_PENDING_SD");
+
+        IGlobalsLike(globals()).transferOwnedStrategyManager(strategyDelegate_, pendingStrategyDelegate_);
+
+        delete pendingStrategyDelegate;
+        strategyDelegate = pendingStrategyDelegate_;
+
+        emit PendingStrategyDelegateAccepted(strategyDelegate_, pendingStrategyDelegate_);
+    }
+
+    function setPendingStrategyDelegate(address pendingStrategyDelegate_)
+        external override whenProtocolNotPaused onlyStrategyDelegateOrProtocolAdmins
+    {
+        pendingStrategyDelegate = pendingStrategyDelegate_;
+
+        emit PendingStrategyDelegateSet(pendingStrategyDelegate_);
     }
 
     /**************************************************************************************************************************************/

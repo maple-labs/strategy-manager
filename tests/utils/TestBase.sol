@@ -69,8 +69,11 @@ contract TestBase is Test {
         vm.stopPrank();
 
         params = IMapleStrategyManagerInitializer.Parameters({
+            strategyDelegate:   strategyDelegate,
             underlyingStrategy: underlyingStrategy
         });
+
+        MockGlobals(globals).__setIsStrategyDelegate(strategyDelegate, true);
 
         vm.prank(deployer);
         strategyManager = MapleStrategyManagerHarness(factory.createInstance(abi.encode(params), "DEFAULT"));

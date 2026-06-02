@@ -26,6 +26,12 @@ interface IMapleStrategyManagerStorage {
     function poolManagerCapOf(address poolManager) external view returns (uint256 poolManagerCapOf);
 
     /**
+     *  @dev    Returns the address of the pending strategy delegate.
+     *  @return pendingStrategyDelegate The address of the pending strategy delegate.
+     */
+    function pendingStrategyDelegate() external view returns (address pendingStrategyDelegate);
+
+    /**
      *  @dev    Returns the number of pending redemption shares held by a given pool manager.
      *  @param  poolManager     Address of the pool manager.
      *  @return pendingSharesOf Number of shares the pool manager has requested to redeem but has not yet processed.
@@ -38,6 +44,12 @@ interface IMapleStrategyManagerStorage {
      *  @return sharesOf    Number of shares owned by the pool manager.
      */
     function sharesOf(address poolManager) external view returns (uint256 sharesOf);
+
+    /**
+     *  @dev    Returns the address of the strategy delegate.
+     *  @return strategyDelegate The address of the strategy delegate.
+     */
+    function strategyDelegate() external view returns (address strategyDelegate);
 
     /**
      *  @dev    Returns the maximum exposure to the strategy.

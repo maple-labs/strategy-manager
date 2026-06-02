@@ -22,6 +22,19 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     event PoolManagerCapSet(address indexed poolManager, uint256 cap);
 
     /**
+     *  @dev   Emitted when the pending strategy delegate accepts the ownership transfer.
+     *  @param previousStrategyDelegate Address of the previous strategy delegate.
+     *  @param newStrategyDelegate      Address of the new strategy delegate.
+     */
+    event PendingStrategyDelegateAccepted(address indexed previousStrategyDelegate, address indexed newStrategyDelegate);
+
+    /**
+     *  @dev   Emitted when the pending strategy delegate is set.
+     *  @param pendingStrategyDelegate Address of the pending strategy delegate.
+     */
+    event PendingStrategyDelegateSet(address indexed pendingStrategyDelegate);
+
+    /**
      *  @dev   Emitted when a pending redemption is cancelled for a pool manager.
      *  @param poolManager     Address of the pool manager whose pending shares were reduced.
      *  @param sharesCancelled Number of pending shares cancelled.
@@ -82,6 +95,21 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
      *  @dev Complete the configuration.
      */
     function completeConfiguration() external;
+
+    /**************************************************************************************************************************************/
+    /*** Ownership Transfer Functions                                                                                                   ***/
+    /**************************************************************************************************************************************/
+
+    /**
+     *  @dev Accepts the role of strategy delegate.
+     */
+    function acceptStrategyDelegate() external;
+
+    /**
+     *  @dev   Sets an address as the pending strategy delegate. Passing address(0) cancels a pending transfer.
+     *  @param pendingStrategyDelegate Address of the new strategy delegate.
+     */
+    function setPendingStrategyDelegate(address pendingStrategyDelegate) external;
 
     /**************************************************************************************************************************************/
     /*** Liquidity Management Functions                                                                                                ***/

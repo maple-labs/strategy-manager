@@ -5,15 +5,19 @@ interface IGlobalsLike {
 
     function canDeploy(address caller) external view returns (bool);
 
+    function governor() external view returns (address);
+
     function isFunctionPaused(bytes4 signature) external view returns (bool);
 
     function isInstanceOf(bytes32 instanceId, address instance) external view returns (bool isInstance);
 
-    function securityAdmin() external view returns (address);
-
-    function strategyDelegateOf(address strategyManager) external view returns (address);
+    function isStrategyDelegate(address account) external view returns (bool isStrategyDelegate);
 
     function operationalAdmin() external view returns (address);
+
+    function securityAdmin() external view returns (address);
+
+    function transferOwnedStrategyManager(address fromStrategyDelegate, address toStrategyDelegate) external;
 
 }
 

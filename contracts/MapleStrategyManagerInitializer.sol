@@ -10,15 +10,13 @@ contract MapleStrategyManagerInitializer is IMapleStrategyManagerInitializer, Ma
 
     // TODO: check whether further parameters such as fee or strategy metadata should be passed
     function _initialize(IMapleStrategyManagerInitializer.Parameters memory params_) internal {
-        require(params_.strategyDelegate   != address(0), "MSMI:I:ZERO_STRATEGY_DELEGATE");
-        require(params_.underlyingStrategy != address(0), "MSMI:I:ZERO_UNDERLYING_STRATEGY");
+        require(params_.strategyDelegate != address(0), "MSMI:I:ZERO_STRATEGY_DELEGATE");
 
         address globals_ = IProxyFactoryLike(msg.sender).mapleGlobals();
 
         require(IGlobalsLike(globals_).isStrategyDelegate(params_.strategyDelegate), "MSMI:I:INVALID_DELEGATE");
 
-        strategyDelegate   = params_.strategyDelegate;
-        underlyingStrategy = params_.underlyingStrategy;
+        strategyDelegate = params_.strategyDelegate;
 
         _locked = 1;
 

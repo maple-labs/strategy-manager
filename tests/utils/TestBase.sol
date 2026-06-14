@@ -5,6 +5,7 @@ import { Test } from "../../modules/forge-std/src/Test.sol";
 
 import { IMapleStrategyManagerInitializer } from "../../contracts/interfaces/IMapleStrategyManagerInitializer.sol";
 
+import { MapleStrategyDeployer }       from "../../contracts/MapleStrategyDeployer.sol";
 import { MapleStrategyManagerFactory } from "../../contracts/MapleStrategyManagerFactory.sol";
 
 import { MapleStrategyManagerHarness, MapleStrategyManagerInitializerHarness } from "./Harnesses.sol";
@@ -14,7 +15,8 @@ import {
     MockGlobals,
     MockPoolManager,
     MockPoolManagerFactory,
-    MockStrategy
+    MockStrategy,
+    MockStrategyFactory
 } from "./Mocks.sol";
 
 contract TestBase is Test {
@@ -41,8 +43,10 @@ contract TestBase is Test {
     address asset              = address(new MockERC20());
     address underlyingStrategy = address(new MockStrategy());
 
-    MapleStrategyManagerFactory factory;
+    MapleStrategyDeployer       strategyDeployer;
     MapleStrategyManagerHarness strategyManager;
+    MapleStrategyManagerFactory factory;
+    MockStrategyFactory         strategyFactory;
 
     function setUp() public virtual {
         startingTime = uint32(block.timestamp);
@@ -69,8 +73,7 @@ contract TestBase is Test {
         vm.stopPrank();
 
         params = IMapleStrategyManagerInitializer.Parameters({
-            strategyDelegate:   strategyDelegate,
-            underlyingStrategy: underlyingStrategy
+            strategyDelegate: strategyDelegate
         });
 
         MockGlobals(globals).__setIsStrategyDelegate(strategyDelegate, true);
@@ -80,6 +83,7 @@ contract TestBase is Test {
 
         MockGlobals(globals).__setStrategyDelegate(address(strategyManager), strategyDelegate);
 
+        strategyManager.setUnderlyingStrategy(underlyingStrategy);
         strategyManager.completeConfiguration();
         strategyManager.__setActive(true);
     }

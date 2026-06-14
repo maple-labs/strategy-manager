@@ -37,7 +37,7 @@ contract MigrateTests is TestBase {
     }
 
     function test_migrate_success() external {
-        assertEq(strategyManager.underlyingStrategy(), params.underlyingStrategy);
+        assertEq(strategyManager.underlyingStrategy(), underlyingStrategy);
 
         vm.prank(address(factory));
         strategyManager.migrate(migrator, arguments);

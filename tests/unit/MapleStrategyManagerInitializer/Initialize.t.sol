@@ -18,14 +18,6 @@ contract InitializeTests is TestBase {
         proxy.__initialize(params);
     }
 
-    function test_initialize_revert_zeroUnderlyingStrategy() external {
-        params.underlyingStrategy = address(0);
-
-        vm.prank(address(factory));
-        vm.expectRevert("MSMI:I:ZERO_UNDERLYING_STRATEGY");
-        proxy.__initialize(params);
-    }
-
     function test_initialize_revert_invalidStrategyDelegate() external {
         params.strategyDelegate = makeAddr("invalidStrategyDelegate");
 
@@ -42,7 +34,7 @@ contract InitializeTests is TestBase {
         proxy.__initialize(params);
 
         assertEq(proxy.strategyDelegate(),   strategyDelegate);
-        assertEq(proxy.underlyingStrategy(), underlyingStrategy);
+        assertEq(proxy.underlyingStrategy(), address(0));
         assertEq(proxy.active(),             false);
     }
 

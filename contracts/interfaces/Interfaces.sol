@@ -31,6 +31,12 @@ interface IProxyFactoryLike {
 
 }
 
+interface IStrategyLike {
+
+    function strategyManager() external view returns (address strategyManager);
+
+}
+
 interface IPoolManagerLike {
 
     function factory() external view returns (address factory);

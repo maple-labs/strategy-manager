@@ -69,7 +69,7 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     event StrategyLiquidityCapSet(uint256 cap);
 
     /**
-     *  @dev Emitted when the strategy manager configuration is marked as complete.
+     *  @dev   Emitted when the strategy manager configuration is marked as complete.
      */
     event StrategyManagerConfigurationComplete();
 
@@ -87,6 +87,12 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
         uint256 sharesMinted
     );
 
+    /**
+     *  @dev   Emitted when the underlying strategy is set.
+     *  @param underlyingStrategy Address of the underlying strategy.
+     */
+    event UnderlyingStrategySet(address indexed underlyingStrategy);
+
     /**************************************************************************************************************************************/
     /*** Initial Configuration Functions                                                                                                ***/
     /**************************************************************************************************************************************/
@@ -95,6 +101,12 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
      *  @dev Complete the configuration.
      */
     function completeConfiguration() external;
+
+    /**
+     *  @dev   Sets the underlying strategy during deployment before configuration is complete.
+     *  @param underlyingStrategy Address of the underlying strategy.
+     */
+    function setUnderlyingStrategy(address underlyingStrategy) external;
 
     /**************************************************************************************************************************************/
     /*** Ownership Transfer Functions                                                                                                   ***/

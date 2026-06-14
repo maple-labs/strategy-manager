@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
+import { MapleProxiedInternals }  from "../../modules/proxy-factory/contracts/MapleProxiedInternals.sol";
+import { MapleProxyFactory }      from "../../modules/proxy-factory/contracts/MapleProxyFactory.sol";
+
+import { IGlobalsLike } from "../../contracts/interfaces/Interfaces.sol";
+
 import { MapleStrategyManagerStorage } from "../../contracts/MapleStrategyManagerStorage.sol";
 
 contract MockGlobals {
@@ -105,6 +110,26 @@ contract MockPoolManagerFactory {
 
 }
 
+contract MockStrategyFactory is MapleProxyFactory {
+
+    address public invalidInstance;
+
+    constructor(address globals_) MapleProxyFactory(globals_) {}
+
+    function __setInvalidInstance(address invalidInstance_) external {
+        invalidInstance = invalidInstance_;
+    }
+
+    function createInstance(bytes calldata arguments_, bytes32 salt_) public override returns (address instance_) {
+        require(IGlobalsLike(mapleGlobals).canDeploy(msg.sender), "MSF:CI:CANNOT_DEPLOY");
+
+        if (address(invalidInstance) != address(0)) return invalidInstance;
+
+        instance_ = super.createInstance(arguments_, salt_);
+    }
+
+}
+
 contract MockERC20 {
 
     mapping(address => uint256) public balanceOf;
@@ -126,6 +151,44 @@ contract MockERC20 {
     function __setBalance(address account_, uint256 balance_) external {
         totalSupply         = totalSupply - balanceOf[account_] + balance_;
         balanceOf[account_] = balance_;
+    }
+
+}
+
+contract MockDeployableStrategy is MapleProxiedInternals {
+
+    address public strategyManager;
+
+    function factory() external view returns (address factory_) {
+        factory_ = _factory();
+    }
+
+    function implementation() external view returns (address implementation_) {
+        implementation_ = _implementation();
+    }
+
+    function migrate(address migrator_, bytes calldata arguments_) external {
+        require(_migrate(migrator_, arguments_), "MDS:M:FAILED");
+    }
+
+    function setImplementation(address implementation_) external {
+        _setImplementation(implementation_);
+    }
+
+}
+
+contract MockDeployableStrategyInitializer {
+
+    address public strategyManager;
+
+    fallback() external {
+        address strategyManager_ = abi.decode(msg.data[:32], (address));
+
+        if (msg.data.length > 32 && abi.decode(msg.data[32:], (bool))) {
+            strategyManager_ = address(1);
+        }
+
+        strategyManager = strategyManager_;
     }
 
 }

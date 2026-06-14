@@ -107,6 +107,15 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         emit StrategyManagerConfigurationComplete();
     }
 
+    // NOTE: This function is always called atomically during the deployment process so a DoS attack is not possible.
+    function setUnderlyingStrategy(address underlyingStrategy_) external override whenNotPaused {
+        require(!configured, "MSM:SUS:ALREADY_CONFIGURED");
+
+        underlyingStrategy = underlyingStrategy_;
+
+        emit UnderlyingStrategySet(underlyingStrategy_);
+    }
+
     /**************************************************************************************************************************************/
     /*** Globals Admin Functions                                                                                                        ***/
     /**************************************************************************************************************************************/

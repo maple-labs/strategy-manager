@@ -34,6 +34,10 @@ contract MapleStrategyManagerHarness is MapleStrategyManager {
         totalShares = totalShares_;
     }
 
+    function __setUnderlyingStrategy(address underlyingStrategy_) external {
+        underlyingStrategy = underlyingStrategy_;
+    }
+
     function locked() external view returns (uint256 locked_) {
         locked_ = _locked;
     }

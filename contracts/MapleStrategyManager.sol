@@ -289,6 +289,14 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         assetsUnderManagement_ = IUnderlyingStrategyLike(underlyingStrategy).assetsUnderManagement();
     }
 
+    function convertToAssets(uint256 shares_) external view override returns (uint256 assets_) {
+        assets_ = _convertToAssets(shares_, assetsUnderManagement());
+    }
+
+    function convertToShares(uint256 assets_) external view override returns (uint256 shares_) {
+        shares_ = _convertToShares(assets_, assetsUnderManagement());
+    }
+
     function factory() external view override returns (address factory_) {
         factory_ = _factory();
     }

@@ -206,6 +206,20 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     function assetsUnderManagement() external view returns (uint256 assetsUnderManagement);
 
     /**
+     *  @dev    Converts shares to assets based on the current total assets and total shares.
+     *  @param  shares Number of shares to convert.
+     *  @return assets Number of assets converted from shares.
+     */
+    function convertToAssets(uint256 shares) external view returns (uint256 assets);
+
+    /**
+     *  @dev    Converts assets to shares based on the current total assets and total shares.
+     *  @param  assets Number of assets to convert.
+     *  @return shares Number of shares converted from assets.
+     */
+    function convertToShares(uint256 assets) external view returns (uint256 shares);
+
+    /**
      *  @dev    Returns the address of the Maple globals contract.
      *  @return globals Address of the Maple globals contract.
      */

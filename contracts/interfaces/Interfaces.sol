@@ -57,6 +57,8 @@ interface IUnderlyingStrategyLike {
 
     function fundUnderlyingStrategy(uint256 assets, bytes calldata data) external returns (uint256 amount);
 
+    function unrealizedLosses() external view returns (uint256 unrealizedLosses);
+
     function withdrawFromUnderlyingStrategy(address destination, uint256 assets, bytes calldata data) external;
 
 }

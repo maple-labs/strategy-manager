@@ -199,6 +199,7 @@ contract MockStrategy {
 
     uint256 public assetsUnderManagement;
     uint256 public availableToWithdraw;
+    uint256 public unrealizedLosses;
 
     uint256 internal _fundReturn;
 
@@ -218,6 +219,10 @@ contract MockStrategy {
 
     function __setFundUnderlyingStrategyReturn(uint256 fundReturn_) external {
         _fundReturn = fundReturn_;
+    }
+
+    function __setUnrealizedLosses(uint256 unrealizedLosses_) external {
+        unrealizedLosses = unrealizedLosses_;
     }
 
     function fundUnderlyingStrategy(uint256, bytes calldata) external returns (uint256 amount_) {

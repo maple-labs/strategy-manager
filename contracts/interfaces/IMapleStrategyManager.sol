@@ -226,6 +226,20 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     function globals() external view returns (address globals);
 
     /**
+     *  @dev    Converts shares to assets using the exit rate, which subtracts unrealized losses from total assets.
+     *  @param  shares Number of shares to convert.
+     *  @return assets Number of exit assets converted from shares.
+     */
+    function convertToExitAssets(uint256 shares) external view returns (uint256 assets);
+
+    /**
+     *  @dev    Converts assets to shares using the exit rate, which subtracts unrealized losses from total assets.
+     *  @param  assets Number of assets to convert.
+     *  @return shares Number of shares converted from exit assets.
+     */
+    function convertToExitShares(uint256 assets) external view returns (uint256 shares);
+
+    /**
      *  @dev    Returns whether the given asset is supported by the strategy manager.
      *  @param  asset       Address of the asset to query.
      *  @return isSupported True if the strategy manager supports `asset`.
@@ -237,5 +251,12 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
      *  @return securityAdmin Address of the security admin.
      */
     function securityAdmin() external view returns (address securityAdmin);
+
+    /**
+     *  @dev    Returns the unrealized losses attributed to a given pool manager based on its share of total shares.
+     *  @param  poolManager      Address of the pool manager.
+     *  @return unrealizedLosses Unrealized losses attributed to the pool manager.
+     */
+    function unrealizedLossesOf(address poolManager) external view returns (uint256 unrealizedLosses);
 
 }

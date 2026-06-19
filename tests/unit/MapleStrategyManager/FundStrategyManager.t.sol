@@ -75,6 +75,23 @@ contract FundStrategyManagerFailureTests is TestBase {
         strategyManager.fundStrategyManager(otherPoolManager, 1, "");
     }
 
+    function test_fundStrategyManager_revert_zeroTotalAssetsWithNonZeroShares() external {
+        setStrategyLiquidityCap(type(uint256).max);
+
+        setPoolManagerCap(poolManager, type(uint256).max);
+
+        setStrategyManagerState({
+            aum_:         0,
+            totalShares_: 100
+        });
+
+        MockStrategy(underlyingStrategy).__setFundUnderlyingStrategyReturn(100);
+
+        vm.prank(liquidityBot);
+        vm.expectRevert(stdError.divisionError);
+        strategyManager.fundStrategyManager(poolManager, 100, "");
+    }
+
     function test_fundStrategyManager_revert_zeroShares() external {
         setStrategyLiquidityCap(type(uint256).max);
 
@@ -102,23 +119,6 @@ contract FundStrategyManagerFailureTests is TestBase {
         vm.prank(liquidityBot);
         vm.expectRevert("MSM:FSM:ZERO_SHARES");
         strategyManager.fundStrategyManager(poolManager, 1, "");
-    }
-
-    function test_fundStrategyManager_revert_zeroTotalAssetsWithNonZeroShares() external {
-        setStrategyLiquidityCap(type(uint256).max);
-
-        setPoolManagerCap(poolManager, type(uint256).max);
-
-        setStrategyManagerState({
-            aum_:         0,
-            totalShares_: 100
-        });
-
-        MockStrategy(underlyingStrategy).__setFundUnderlyingStrategyReturn(100);
-
-        vm.prank(liquidityBot);
-        vm.expectRevert(stdError.divisionError);
-        strategyManager.fundStrategyManager(poolManager, 100, "");
     }
 
     function test_fundStrategyManager_revert_poolManagerCap() external {

@@ -212,7 +212,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         require(shares_ != 0,                             "MSM:PR:ZERO_SHARES");
         require(shares_ <= pendingSharesOf[poolManager_], "MSM:PR:EXCEEDS_REQUESTED");
 
-        uint256 assets_ = _convertToAssets(shares_, assetsUnderManagement());
+        uint256 assets_ = _convertToExitAssets(shares_, assetsUnderManagement());
 
         require(assets_ != 0,                     "MSM:PR:ZERO_ASSETS");
         require(assets_ <= availableToWithdraw(), "MSM:PR:NOT_ENOUGH_LIQUIDITY");
@@ -293,6 +293,14 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         assets_ = _convertToAssets(shares_, assetsUnderManagement());
     }
 
+    function convertToExitAssets(uint256 shares_) external view override returns (uint256 assets_) {
+        assets_ = _convertToExitAssets(shares_, assetsUnderManagement());
+    }
+
+    function convertToExitShares(uint256 assets_) external view override returns (uint256 shares_) {
+        shares_ = _convertToExitShares(assets_, assetsUnderManagement());
+    }
+
     function convertToShares(uint256 assets_) external view override returns (uint256 shares_) {
         shares_ = _convertToShares(assets_, assetsUnderManagement());
     }
@@ -317,6 +325,14 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         securityAdmin_ = IGlobalsLike(globals()).securityAdmin();
     }
 
+    function unrealizedLossesOf(address poolManager_) external view override returns (uint256 unrealizedLosses_) {
+        uint256 totalShares_ = totalShares;
+
+        if (totalShares_ == 0) return 0;
+
+        unrealizedLosses_ = _divRoundUp(sharesOf[poolManager_] * _unrealizedLosses(assetsUnderManagement()), totalShares_);
+    }
+
     /**************************************************************************************************************************************/
     /*** Internal Functions                                                                                                             ***/
     /**************************************************************************************************************************************/
@@ -329,6 +345,14 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         assets_ = shares_ * totalAssets_ / totalShares_;
     }
 
+    function _convertToExitAssets(uint256 shares_, uint256 totalAssets_) internal view returns (uint256 assets_) {
+        assets_ = _convertToAssets(shares_, totalAssets_ - _unrealizedLosses(totalAssets_));
+    }
+
+    function _convertToExitShares(uint256 assets_, uint256 totalAssets_) internal view returns (uint256 shares_) {
+        shares_ = _convertToShares(assets_, totalAssets_ - _unrealizedLosses(totalAssets_));
+    }
+
     function _convertToShares(uint256 assets_, uint256 totalAssets_) internal view returns (uint256 shares_) {
         uint256 totalShares_ = totalShares;
 
@@ -337,6 +361,21 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         // TODO: What if totalAssets_ = 0 but totalShares_ > 0? Currently we are following the same pattern as we have in MaplePool.sol
         //       Reconsider if this is the desired behavior.
         shares_ = assets_ * totalShares_ / totalAssets_;
+    }
+
+    function _divRoundUp(uint256 numerator_, uint256 divisor_) internal pure returns (uint256 result_) {
+        result_ = (numerator_ + divisor_ - 1) / divisor_;
+    }
+
+    function _min(uint256 a_, uint256 b_) internal pure returns (uint256 min_) {
+        min_ = a_ < b_ ? a_ : b_;
+    }
+
+    // TODO: Should we remove the totalAssets_ input here?
+    function _unrealizedLosses(uint256 totalAssets_) internal view returns (uint256 unrealizedLosses_) {
+        unrealizedLosses_ = IUnderlyingStrategyLike(underlyingStrategy).unrealizedLosses();
+
+        unrealizedLosses_ = _min(unrealizedLosses_, totalAssets_);
     }
 
 }

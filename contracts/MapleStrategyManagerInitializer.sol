@@ -8,7 +8,6 @@ import { MapleStrategyManagerStorage } from "./MapleStrategyManagerStorage.sol";
 
 contract MapleStrategyManagerInitializer is IMapleStrategyManagerInitializer, MapleStrategyManagerStorage {
 
-    // TODO: check whether further parameters such as fee or strategy metadata should be passed
     function _initialize(IMapleStrategyManagerInitializer.Parameters memory params_) internal {
         require(params_.strategyDelegate != address(0), "MSMI:I:ZERO_STRATEGY_DELEGATE");
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import { IMapleProxied } from "../../modules/proxy-factory/contracts/interfaces/IMapleProxied.sol";
+import { IMapleProxied } from "../../modules/maple-proxy-factory/contracts/interfaces/IMapleProxied.sol";
 
 import { IMapleStrategyManagerStorage } from "./IMapleStrategyManagerStorage.sol";
 
@@ -251,6 +251,12 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
      *  @return securityAdmin Address of the security admin.
      */
     function securityAdmin() external view returns (address securityAdmin);
+
+    /**
+     *  @dev    Returns the total unrealized losses reported by the underlying strategy, clamped to assets under management.
+     *  @return unrealizedLosses Total unrealized losses, capped at assets under management.
+     */
+    function unrealizedLosses() external view returns (uint256 unrealizedLosses);
 
     /**
      *  @dev    Returns the unrealized losses attributed to a given pool manager based on its share of total shares.

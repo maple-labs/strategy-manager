@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import { MapleProxiedInternals } from "../modules/proxy-factory/contracts/MapleProxiedInternals.sol";
+import { MapleProxiedInternals } from "../modules/maple-proxy-factory/contracts/MapleProxiedInternals.sol";
 
 import { IMapleStrategyManager } from "./interfaces/IMapleStrategyManager.sol";
 
@@ -14,12 +14,7 @@ import {
 
 import { MapleStrategyManagerStorage } from "./MapleStrategyManagerStorage.sol";
 
-// TODO: Consider ACL during strategy manager deployment
 contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStorage, MapleProxiedInternals {
-
-    /**************************************************************************************************************************************/
-    /*** Constants                                                                                                                      ***/
-    /**************************************************************************************************************************************/
 
     /**************************************************************************************************************************************/
     /*** Modifiers                                                                                                                      ***/
@@ -168,25 +163,22 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         emit RedemptionCancelled(poolManager_, shares_);
     }
 
-    // TODO: Consider adding minShares. What can go wrong if bot key gets compromised.
     function fundStrategyManager(address poolManager_, uint256 assetsIn_, bytes calldata data_)
         external override whenNotPaused nonReentrant onlyOperator
     {
-        require(active,         "MSM:FSM:NOT_ACTIVE");
-        require(assetsIn_ != 0, "MSM:FSM:ZERO_ASSETS");
+        require(active,                            "MSM:FSM:NOT_ACTIVE");
+        require(assetsIn_ != 0,                    "MSM:FSM:ZERO_ASSETS");
+        require(_isValidPoolManager(poolManager_), "MSM:FSM:INVALID_PM");
 
-        address factory_ = IPoolManagerLike(poolManager_).factory();
+        uint256 poolManagerCap_ = poolManagerCapOf[poolManager_];
 
-        require(IGlobalsLike(globals()).isInstanceOf("POOL_MANAGER_FACTORY", factory_), "MSM:FSM:INVALID_PM_FACTORY");
-        // TODO: validate the poolManager is also attached to the strategy
-        require(IProxyFactoryLike(factory_).isInstance(poolManager_),                   "MSM:FSM:INVALID_PM");
+        require(poolManagerCap_ != 0, "MSM:FSM:PM_ZERO_CAP");
 
         address underlyingStrategy_ = underlyingStrategy;
         uint256 totalAssetsBefore_  = assetsUnderManagement();
 
         IPoolManagerLike(poolManager_).requestFunds(underlyingStrategy_, assetsIn_);
 
-        // TODO: Check if underlying strategy will always implement this function or we need to check before calling.
         uint256 assetsDeposited_ = IUnderlyingStrategyLike(underlyingStrategy_).fundUnderlyingStrategy(assetsIn_, data_);
         uint256 sharesMinted_    = _convertToShares(assetsDeposited_, totalAssetsBefore_);
 
@@ -195,13 +187,12 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         sharesOf[poolManager_] += sharesMinted_;
         totalShares            += sharesMinted_;
 
-        require(assetsOf(poolManager_)  <= poolManagerCapOf[poolManager_], "MSM:FSM:POOL_MANAGER_CAP");
-        require(assetsUnderManagement() <= strategyLiquidityCap,           "MSM:FSM:STRATEGY_LIQUIDITY_CAP");
+        require(assetsOf(poolManager_)  <= poolManagerCap_,      "MSM:FSM:POOL_MANAGER_CAP");
+        require(assetsUnderManagement() <= strategyLiquidityCap, "MSM:FSM:STRATEGY_LIQUIDITY_CAP");
 
         emit StrategyManagerFunded(poolManager_, assetsIn_, assetsDeposited_, sharesMinted_);
     }
 
-    // TODO: Do we need to validate poolManager here? Consider adding minAssets?
     function processRedemption(
         address poolManager_,
         uint256 shares_,
@@ -209,6 +200,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     )
         external override whenNotPaused nonReentrant onlyOperator
     {
+        require(_isValidPoolManager(poolManager_),        "MSM:PR:INVALID_PM");
         require(shares_ != 0,                             "MSM:PR:ZERO_SHARES");
         require(shares_ <= pendingSharesOf[poolManager_], "MSM:PR:EXCEEDS_REQUESTED");
 
@@ -229,12 +221,12 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
             data_
         );
 
-        // TODO: Consider emitting data as well?
         emit RedemptionProcessed(poolManager_, shares_, assets_);
     }
 
-    // TODO: Do we need to validate poolManager here?
     function requestRedeem(address poolManager_, uint256 shares_) external override whenNotPaused nonReentrant onlyOperator {
+        require(_isValidPoolManager(poolManager_), "MSM:RR:INVALID_PM");
+
         uint256 remainingShares_ = sharesOf[poolManager_] - pendingSharesOf[poolManager_];
 
         require(shares_ != 0,                "MSM:RR:ZERO_SHARES");
@@ -325,6 +317,10 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         securityAdmin_ = IGlobalsLike(globals()).securityAdmin();
     }
 
+    function unrealizedLosses() external view override returns (uint256 unrealizedLosses_) {
+        unrealizedLosses_ = _unrealizedLosses(assetsUnderManagement());
+    }
+
     function unrealizedLossesOf(address poolManager_) external view override returns (uint256 unrealizedLosses_) {
         uint256 totalShares_ = totalShares;
 
@@ -358,8 +354,6 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
 
         if (totalShares_ == 0) return assets_;
 
-        // TODO: What if totalAssets_ = 0 but totalShares_ > 0? Currently we are following the same pattern as we have in MaplePool.sol
-        //       Reconsider if this is the desired behavior.
         shares_ = assets_ * totalShares_ / totalAssets_;
     }
 
@@ -367,11 +361,18 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         result_ = (numerator_ + divisor_ - 1) / divisor_;
     }
 
+    function _isValidPoolManager(address poolManager_) internal view returns (bool isValid_) {
+        address factory_ = IPoolManagerLike(poolManager_).factory();
+
+        isValid_ =
+            IGlobalsLike(globals()).isInstanceOf("POOL_MANAGER_FACTORY", factory_) &&
+            IProxyFactoryLike(factory_).isInstance(poolManager_);
+    }
+
     function _min(uint256 a_, uint256 b_) internal pure returns (uint256 min_) {
         min_ = a_ < b_ ? a_ : b_;
     }
 
-    // TODO: Should we remove the totalAssets_ input here?
     function _unrealizedLosses(uint256 totalAssets_) internal view returns (uint256 unrealizedLosses_) {
         unrealizedLosses_ = IUnderlyingStrategyLike(underlyingStrategy).unrealizedLosses();
 

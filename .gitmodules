@@ -1,6 +1,6 @@
 [submodule "modules/forge-std"]
 	path = modules/forge-std
 	url = git@github.com:foundry-rs/forge-std.git
-[submodule "modules/proxy-factory"]
-	path = modules/proxy-factory
+[submodule "modules/maple-proxy-factory"]
+	path = modules/maple-proxy-factory
 	url = git@github.com:maple-labs/maple-proxy-factory.git

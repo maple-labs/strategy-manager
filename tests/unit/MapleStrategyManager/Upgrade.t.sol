@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import { IMapleProxied } from "../../../modules/proxy-factory/contracts/interfaces/IMapleProxied.sol";
+import { IMapleProxied } from "../../../modules/maple-proxy-factory/contracts/interfaces/IMapleProxied.sol";
 
 import { MapleStrategyManager } from "../../../contracts/MapleStrategyManager.sol";
 

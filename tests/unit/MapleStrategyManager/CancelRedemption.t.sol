@@ -5,8 +5,13 @@ import { IMapleStrategyManager } from "../../../contracts/interfaces/IMapleStrat
 
 import { MapleStrategyManager } from "../../../contracts/MapleStrategyManager.sol";
 
-import { MockGlobals, MockPoolManager } from "../../utils/Mocks.sol";
-import { TestBase }                     from "../../utils/TestBase.sol";
+import {
+    MockGlobals,
+    MockPoolManager,
+    MockPoolManagerFactory
+} from "../../utils/Mocks.sol";
+
+import { TestBase } from "../../utils/TestBase.sol";
 
 contract CancelRedemptionFailureTests is TestBase {
 
@@ -360,6 +365,11 @@ contract CancelRedemptionSuccessTests is TestBase {
     function test_cancelRedemption_success_multiplePoolManagers() external {
         address poolManager1 = address(new MockPoolManager());
         address poolManager2 = address(new MockPoolManager());
+
+        MockPoolManager(poolManager1).__setFactory(poolManagerFactory);
+        MockPoolManager(poolManager2).__setFactory(poolManagerFactory);
+        MockPoolManagerFactory(poolManagerFactory).__setIsInstance(poolManager1, true);
+        MockPoolManagerFactory(poolManagerFactory).__setIsInstance(poolManager2, true);
 
         uint256 totalAum    = 300;
         uint256 totalShares = 30;

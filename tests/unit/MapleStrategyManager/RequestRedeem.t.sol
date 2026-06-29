@@ -8,6 +8,7 @@ import { MapleStrategyManager } from "../../../contracts/MapleStrategyManager.so
 import {
     MockGlobals,
     MockPoolManager,
+    MockPoolManagerFactory,
     MockStrategy
 } from "../../utils/Mocks.sol";
 
@@ -34,6 +35,28 @@ contract RequestRedeemFailureTests is TestBase {
     function test_requestRedeem_revert_notAuthorized() external {
         vm.expectRevert("MSM:NOT_OPERATOR");
         strategyManager.requestRedeem(poolManager, 1);
+    }
+
+    function test_requestRedeem_revert_invalidPMFactory() external {
+        address otherFactory     = address(new MockPoolManagerFactory());
+        address otherPoolManager = address(new MockPoolManager());
+
+        MockPoolManager(otherPoolManager).__setFactory(otherFactory);
+        MockPoolManagerFactory(otherFactory).__setIsInstance(otherPoolManager, true);
+
+        vm.prank(liquidityBot);
+        vm.expectRevert("MSM:RR:INVALID_PM");
+        strategyManager.requestRedeem(otherPoolManager, 1);
+    }
+
+    function test_requestRedeem_revert_invalidPM() external {
+        address otherPoolManager = address(new MockPoolManager());
+
+        MockPoolManager(otherPoolManager).__setFactory(poolManagerFactory);
+
+        vm.prank(liquidityBot);
+        vm.expectRevert("MSM:RR:INVALID_PM");
+        strategyManager.requestRedeem(otherPoolManager, 1);
     }
 
     function test_requestRedeem_revert_zeroShares() external {
@@ -267,6 +290,11 @@ contract RequestRedeemSuccessTests is TestBase {
     function test_requestRedeem_success_multiplePoolManagers() external {
         address poolManager1 = address(new MockPoolManager());
         address poolManager2 = address(new MockPoolManager());
+
+        MockPoolManager(poolManager1).__setFactory(poolManagerFactory);
+        MockPoolManager(poolManager2).__setFactory(poolManagerFactory);
+        MockPoolManagerFactory(poolManagerFactory).__setIsInstance(poolManager1, true);
+        MockPoolManagerFactory(poolManagerFactory).__setIsInstance(poolManager2, true);
 
         uint256 totalAum    = 300;
         uint256 totalShares = 30;

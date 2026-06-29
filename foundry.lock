@@ -8,7 +8,7 @@
   "modules/forge-std": {
     "rev": "2999b6563e1f07971a09d48b82f3fac910d72a05"
   },
-  "modules/proxy-factory": {
+  "modules/maple-proxy-factory": {
     "rev": "78057cd6415ed2938ffa02b155fa02e0169bc240"
   }
 }

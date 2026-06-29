@@ -39,6 +39,28 @@ contract ProcessRedemptionFailureTests is TestBase {
         strategyManager.processRedemption(poolManager, 1, "");
     }
 
+    function test_processRedemption_revert_invalidPMFactory() external {
+        address otherFactory     = address(new MockPoolManagerFactory());
+        address otherPoolManager = address(new MockPoolManager());
+
+        MockPoolManager(otherPoolManager).__setFactory(otherFactory);
+        MockPoolManagerFactory(otherFactory).__setIsInstance(otherPoolManager, true);
+
+        vm.prank(liquidityBot);
+        vm.expectRevert("MSM:PR:INVALID_PM");
+        strategyManager.processRedemption(otherPoolManager, 1, "");
+    }
+
+    function test_processRedemption_revert_invalidPM() external {
+        address otherPoolManager = address(new MockPoolManager());
+
+        MockPoolManager(otherPoolManager).__setFactory(poolManagerFactory);
+
+        vm.prank(liquidityBot);
+        vm.expectRevert("MSM:PR:INVALID_PM");
+        strategyManager.processRedemption(otherPoolManager, 1, "");
+    }
+
     function test_processRedemption_revert_zeroShares() external {
         vm.prank(liquidityBot);
         vm.expectRevert("MSM:PR:ZERO_SHARES");

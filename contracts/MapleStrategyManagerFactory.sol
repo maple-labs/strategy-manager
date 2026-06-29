@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import { MapleProxyFactory } from "../modules/proxy-factory/contracts/MapleProxyFactory.sol";
+import { MapleProxyFactory } from "../modules/maple-proxy-factory/contracts/MapleProxyFactory.sol";
 
 import { IGlobalsLike } from "./interfaces/Interfaces.sol";
 

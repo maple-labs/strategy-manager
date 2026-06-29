@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import { MapleProxiedInternals }  from "../../modules/proxy-factory/contracts/MapleProxiedInternals.sol";
-import { MapleProxyFactory }      from "../../modules/proxy-factory/contracts/MapleProxyFactory.sol";
+import { MapleProxiedInternals } from "../../modules/proxy-factory/contracts/MapleProxiedInternals.sol";
+import { MapleProxyFactory }     from "../../modules/proxy-factory/contracts/MapleProxyFactory.sol";
 
-import { IGlobalsLike } from "../../contracts/interfaces/Interfaces.sol";
+import { Action, IMapleLiquidityRouter } from "../../contracts/interfaces/IMapleLiquidityRouter.sol";
+import { IGlobalsLike }                  from "../../contracts/interfaces/Interfaces.sol";
 
 import { MapleStrategyManagerStorage } from "../../contracts/MapleStrategyManagerStorage.sol";
 
@@ -110,6 +111,85 @@ contract MockPoolManagerFactory {
 
 }
 
+contract MockStrategyManager {
+
+    address public factory;
+
+    uint256 public assetsUnderManagement;
+    uint256 public totalPendingShares;
+    uint256 public totalShares;
+
+    mapping(address => uint256) public pendingSharesOf;
+    mapping(address => uint256) public sharesOf;
+
+    function __setAssetsUnderManagement(uint256 assetsUnderManagement_) external {
+        assetsUnderManagement = assetsUnderManagement_;
+    }
+
+    function __setFactory(address factory_) external {
+        factory = factory_;
+    }
+
+    function __setSharesOf(address poolManager_, uint256 shares_) external {
+        sharesOf[poolManager_] = shares_;
+    }
+
+    function __setTotalShares(uint256 totalShares_) external {
+        totalShares = totalShares_;
+    }
+
+    function assetsOf(address poolManager_) external view returns (uint256 assets_) {
+        uint256 totalShares_ = totalShares;
+
+        if (totalShares_ == 0) return 0;
+
+        assets_ = sharesOf[poolManager_] * assetsUnderManagement / totalShares_;
+    }
+
+    function cancelRedemption(address poolManager_, uint256 shares_) external virtual {
+        pendingSharesOf[poolManager_] -= shares_;
+        totalPendingShares            -= shares_;
+    }
+
+    function fundStrategyManager(address poolManager_, uint256 assetsIn_, bytes calldata) external virtual {
+        assetsUnderManagement  += assetsIn_;
+        totalShares            += assetsIn_;
+        sharesOf[poolManager_] += assetsIn_;
+    }
+
+    function processRedemption(address poolManager_, uint256 shares_, bytes calldata) external virtual {
+        uint256 assets_ = shares_ * assetsUnderManagement / totalShares;
+
+        pendingSharesOf[poolManager_] -= shares_;
+        sharesOf[poolManager_]        -= shares_;
+        totalPendingShares            -= shares_;
+        totalShares                   -= shares_;
+        assetsUnderManagement         -= assets_;
+    }
+
+    function requestRedeem(address poolManager_, uint256 shares_) external virtual {
+        pendingSharesOf[poolManager_] += shares_;
+        totalPendingShares            += shares_;
+    }
+
+}
+
+contract MockReentrantStrategyManager is MockStrategyManager {
+
+    IMapleLiquidityRouter router;
+
+    function __setRouter(address router_) external {
+        router = IMapleLiquidityRouter(router_);
+    }
+
+    function requestRedeem(address, uint256) external override {
+        Action[] memory actions = new Action[](0);
+
+        router.executeActions(actions, block.timestamp);
+    }
+
+}
+
 contract MockStrategyFactory is MapleProxyFactory {
 
     address public invalidInstance;
@@ -126,6 +206,16 @@ contract MockStrategyFactory is MapleProxyFactory {
         if (address(invalidInstance) != address(0)) return invalidInstance;
 
         instance_ = super.createInstance(arguments_, salt_);
+    }
+
+}
+
+contract MockStrategyManagerFactory {
+
+    mapping(address => bool) public isInstance;
+
+    function __setIsInstance(address instance_, bool isInstance_) external {
+        isInstance[instance_] = isInstance_;
     }
 
 }

@@ -37,6 +37,20 @@ interface IStrategyLike {
 
 }
 
+interface IStrategyManagerLike {
+
+    function cancelRedemption(address poolManager, uint256 shares) external;
+
+    function factory() external view returns (address factory);
+
+    function fundStrategyManager(address poolManager, uint256 assetsIn, bytes calldata data) external;
+
+    function processRedemption(address poolManager, uint256 shares, bytes calldata data) external;
+
+    function requestRedeem(address poolManager, uint256 shares) external;
+
+}
+
 interface IPoolManagerLike {
 
     function factory() external view returns (address factory);

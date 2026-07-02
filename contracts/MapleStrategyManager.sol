@@ -242,6 +242,18 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /*** Administrative Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
 
+    function multicall(bytes[] calldata data_) external override {
+        for (uint256 i = 0; i < data_.length; i++) {
+            ( bool success_, bytes memory returnData_ ) = address(this).delegatecall(data_[i]);
+
+            if (!success_) {
+                assembly ("memory-safe") {
+                    revert(add(32, returnData_), mload(returnData_))
+                }
+            }
+        }
+    }
+
     function setPoolManagerCap(address poolManager_, uint256 cap_) external override whenNotPaused onlyAdminsOrNotConfigured {
         require(poolManagerCapOf[poolManager_] != cap_, "MSM:SPMC:NO_CHANGE");
 

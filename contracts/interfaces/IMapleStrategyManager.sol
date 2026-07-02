@@ -164,6 +164,12 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     /**************************************************************************************************************************************/
 
     /**
+     *  @dev   Allows EOAs to batch admin calls.
+     *  @param data Array of calldata.
+     */
+    function multicall(bytes[] calldata data) external;
+
+    /**
      *  @dev   Sets the strategy manager to be active or inactive.
      *  @param active Whether the strategy manager is active.
      */

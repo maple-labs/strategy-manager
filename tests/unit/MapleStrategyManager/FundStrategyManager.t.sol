@@ -745,6 +745,44 @@ contract FundStrategyManagerSuccessTests is TestBase {
         assertEq(strategyManager.assetsOf(poolManager), 0);
     }
 
+    function test_fundStrategyManager_success_secondFunding_strategyHasImpairment_exchangeRateUnaffected() external {
+        uint256 totalSharesBeforeFund           = 100;
+        uint256 assetsUnderManagementBeforeFund = 200;
+        uint256 unrealizedLosses                = 50;
+
+        setStrategyManagerState({
+            aum_:         assetsUnderManagementBeforeFund,
+            totalShares_: totalSharesBeforeFund
+        });
+
+        MockStrategy(underlyingStrategy).__setUnrealizedLosses(unrealizedLosses);
+
+        assertEq(strategyManager.assetsUnderManagement(), assetsUnderManagementBeforeFund);
+        assertEq(strategyManager.totalShares(),           totalSharesBeforeFund);
+        assertEq(strategyManager.unrealizedLosses(),      unrealizedLosses);
+
+        assertEq(strategyManager.sharesOf(poolManager), 0);
+        assertEq(strategyManager.assetsOf(poolManager), 0);
+
+        uint256 assetsToFund            = 100;
+        uint256 expectedSharesToReceive = 50;
+
+        MockStrategy(underlyingStrategy).__setFundUnderlyingStrategyReturn(assetsToFund);
+
+        vm.expectEmit();
+        emit IMapleStrategyManager.StrategyManagerFunded(poolManager, assetsToFund, assetsToFund, expectedSharesToReceive);
+
+        vm.prank(liquidityBot);
+        strategyManager.fundStrategyManager(poolManager, assetsToFund, "");
+
+        assertEq(strategyManager.assetsUnderManagement(), assetsUnderManagementBeforeFund + assetsToFund);
+        assertEq(strategyManager.totalShares(),           totalSharesBeforeFund + expectedSharesToReceive);
+        assertEq(strategyManager.unrealizedLosses(),      unrealizedLosses);
+
+        assertEq(strategyManager.sharesOf(poolManager), expectedSharesToReceive);
+        assertEq(strategyManager.assetsOf(poolManager), assetsToFund);
+    }
+
     function test_fundStrategyManager_success_multiplePoolManagers() external {
         uint256 fundAmount1 = 100;
         uint256 fundAmount2 = 60;

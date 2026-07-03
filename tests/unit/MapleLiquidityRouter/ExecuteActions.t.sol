@@ -198,6 +198,17 @@ contract ExecuteActionsFailureTests is ExecuteActionsTestBase {
         router.executeActions(actions, block.timestamp);
     }
 
+    function test_executeActions_revert_secondActionFailsValidation() external {
+        Action[] memory actions = new Action[](2);
+
+        actions[0] = _fundStrategyAction(address(mockStrategyManager), poolManager, 1, "");
+        actions[1] = _fundStrategyAction(address(0),                   poolManager, 1, "");
+
+        vm.prank(liquidityBot);
+        vm.expectRevert("MLR:EA:ZERO_SM");
+        router.executeActions(actions, block.timestamp);
+    }
+
 }
 
 contract ExecuteActionsSuccessTests is ExecuteActionsTestBase {

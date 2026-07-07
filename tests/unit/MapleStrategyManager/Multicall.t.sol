@@ -70,7 +70,7 @@ contract MulticallFailureTests is TestBase {
         calls.push(abi.encodeCall(MapleStrategyManager.setPoolManagerCap, (invalidPoolManager, 1)));
 
         vm.prank(strategyDelegate);
-        vm.expectRevert("MSM:SPMC:INVALID_PM_FACTORY");
+        vm.expectRevert("MSM:SPMC:INVALID_PM");
         strategyManager.multicall(calls);
     }
 

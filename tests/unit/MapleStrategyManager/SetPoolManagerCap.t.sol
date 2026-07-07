@@ -62,7 +62,7 @@ contract SetPoolManagerCapFailureTests is TestBase {
         MockPoolManager(otherPoolManager).__setFactory(otherFactory);
         MockPoolManagerFactory(otherFactory).__setIsInstance(otherPoolManager, true);
 
-        vm.expectRevert("MSM:SPMC:INVALID_PM_FACTORY");
+        vm.expectRevert("MSM:SPMC:INVALID_PM");
         setPoolManagerCap(otherPoolManager, 1);
     }
 
@@ -75,7 +75,7 @@ contract SetPoolManagerCapFailureTests is TestBase {
         MockPoolManager(otherPoolManager).__setFactory(otherFactory);
         MockPoolManagerFactory(otherFactory).__setIsInstance(otherPoolManager, true);
 
-        vm.expectRevert("MSM:SPMC:INVALID_PM_FACTORY");
+        vm.expectRevert("MSM:SPMC:INVALID_PM");
         strategyManager.setPoolManagerCap(otherPoolManager, 1);
     }
 
@@ -89,7 +89,7 @@ contract SetPoolManagerCapFailureTests is TestBase {
 
         MockGlobals(globals).__setIsInstanceOf("POOL_MANAGER_FACTORY", poolManagerFactory, false);
 
-        vm.expectRevert("MSM:SPMC:INVALID_PM_FACTORY");
+        vm.expectRevert("MSM:SPMC:INVALID_PM");
         setPoolManagerCap(poolManager, updatedCap);
 
         assertEq(strategyManager.poolManagerCapOf(poolManager), initialCap);

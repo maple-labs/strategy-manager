@@ -255,14 +255,8 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     }
 
     function setPoolManagerCap(address poolManager_, uint256 cap_) external override whenNotPaused onlyAdminsOrNotConfigured {
-        require(poolManagerCapOf[poolManager_] != cap_, "MSM:SPMC:NO_CHANGE");
-
-        if (cap_ != 0) {
-            address factory_ = IPoolManagerLike(poolManager_).factory();
-
-            require(IGlobalsLike(globals()).isInstanceOf("POOL_MANAGER_FACTORY", factory_), "MSM:SPMC:INVALID_PM_FACTORY");
-            require(IProxyFactoryLike(factory_).isInstance(poolManager_),                   "MSM:SPMC:INVALID_PM");
-        }
+        require(poolManagerCapOf[poolManager_] != cap_,         "MSM:SPMC:NO_CHANGE");
+        require(cap_ == 0 || _isValidPoolManager(poolManager_), "MSM:SPMC:INVALID_PM");
 
         poolManagerCapOf[poolManager_] = cap_;
 

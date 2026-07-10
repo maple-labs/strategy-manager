@@ -8,7 +8,8 @@ import { MapleStrategyManager } from "../../../contracts/MapleStrategyManager.so
 import {
     MockGlobals,
     MockPoolManager,
-    MockPoolManagerFactory
+    MockPoolManagerFactory,
+    MockStrategy
 } from "../../utils/Mocks.sol";
 
 import { TestBase } from "../../utils/TestBase.sol";
@@ -32,8 +33,59 @@ contract CancelRedemptionFailureTests is TestBase {
     }
 
     function test_cancelRedemption_revert_notAuthorized() external {
-        vm.expectRevert("MSM:NOT_OPERATOR");
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_PD");
         strategyManager.cancelRedemption(poolManager, 1);
+    }
+
+    function test_cancelRedemption_revert_impairment_liquidityBot() external {
+        MockStrategy(underlyingStrategy).__setImpairedAssets(1);
+
+        vm.prank(liquidityBot);
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_PD");
+        strategyManager.cancelRedemption(poolManager, 1);
+    }
+
+    function test_cancelRedemption_revert_impairment_liquidityRouter() external {
+        MockStrategy(underlyingStrategy).__setImpairedAssets(1);
+
+        vm.prank(liquidityRouter);
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_PD");
+        strategyManager.cancelRedemption(poolManager, 1);
+    }
+
+    function test_cancelRedemption_revert_notPoolManagerFactory() external {
+        address otherFactory     = address(new MockPoolManagerFactory());
+        address otherPoolManager = address(new MockPoolManager());
+
+        MockPoolManager(otherPoolManager).__setFactory(otherFactory);
+        MockPoolManagerFactory(otherFactory).__setIsInstance(otherPoolManager, true);
+
+        vm.prank(liquidityBot);
+        vm.expectRevert("MSM:CR:INVALID_PM");
+        strategyManager.cancelRedemption(otherPoolManager, 1);
+    }
+
+    function test_cancelRedemption_revert_invalidPoolManagerInstance() external {
+        address otherPoolManager = address(new MockPoolManager());
+
+        MockPoolManager(otherPoolManager).__setFactory(poolManagerFactory);
+
+        vm.prank(liquidityBot);
+        vm.expectRevert("MSM:CR:INVALID_PM");
+        strategyManager.cancelRedemption(otherPoolManager, 1);
+    }
+
+    function test_cancelRedemption_revert_wrongPoolDelegate() external {
+        address otherPoolManager  = address(new MockPoolManager());
+        address otherPoolDelegate = makeAddr("otherPoolDelegate");
+
+        MockPoolManager(otherPoolManager).__setFactory(poolManagerFactory);
+        MockPoolManager(otherPoolManager).__setPoolDelegate(otherPoolDelegate);
+        MockPoolManagerFactory(poolManagerFactory).__setIsInstance(otherPoolManager, true);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_PD");
+        strategyManager.cancelRedemption(otherPoolManager, 1);
     }
 
     function test_cancelRedemption_revert_zeroShares() external {
@@ -155,6 +207,11 @@ contract CancelRedemptionSuccessTests is TestBase {
         /**********************************************************************************************************************************/
 
         uint256 sharesToCancel = 4;
+        uint256 impairedAssets = 23;
+
+        // NOTE: Strategy delegate can cancel redemptions even during impairments.
+        MockStrategy(underlyingStrategy).__setImpairedAssets(impairedAssets);
+        MockStrategy(underlyingStrategy).__setUnrealizedLosses(impairedAssets);
 
         vm.expectEmit();
         emit IMapleStrategyManager.RedemptionCancelled(poolManager, sharesToCancel);
@@ -215,6 +272,66 @@ contract CancelRedemptionSuccessTests is TestBase {
         emit IMapleStrategyManager.RedemptionCancelled(poolManager, sharesToCancel);
 
         vm.prank(liquidityBot);
+        strategyManager.cancelRedemption(poolManager, sharesToCancel);
+
+        assertEq(strategyManager.assetsUnderManagement(), totalAum);
+        assertEq(strategyManager.totalShares(),           totalShares);
+        assertEq(strategyManager.totalPendingShares(),    pendingShares - sharesToCancel);
+
+        assertEq(strategyManager.sharesOf(poolManager),        totalShares);
+        assertEq(strategyManager.assetsOf(poolManager),        totalAum);
+        assertEq(strategyManager.pendingSharesOf(poolManager), pendingShares - sharesToCancel);
+    }
+
+    function test_cancelRedemption_success_partial_calledByPoolDelegate() external {
+        uint256 totalAum      = 100;
+        uint256 totalShares   = 10;
+        uint256 pendingShares = 6;
+
+        setStrategyManagerState({
+            aum_:         totalAum,
+            totalShares_: totalShares
+        });
+        strategyManager.__setSharesOf(poolManager, totalShares);
+
+        assertEq(strategyManager.assetsUnderManagement(), totalAum);
+        assertEq(strategyManager.totalShares(),           totalShares);
+        assertEq(strategyManager.totalPendingShares(),    0);
+
+        assertEq(strategyManager.sharesOf(poolManager),        totalShares);
+        assertEq(strategyManager.assetsOf(poolManager),        totalAum);
+        assertEq(strategyManager.pendingSharesOf(poolManager), 0);
+
+        /**********************************************************************************************************************************/
+        /*** Step 1: Request redemption                                                                                                 ***/
+        /**********************************************************************************************************************************/
+
+        vm.prank(poolDelegate);
+        strategyManager.requestRedeem(poolManager, pendingShares);
+
+        assertEq(strategyManager.assetsUnderManagement(), totalAum);
+        assertEq(strategyManager.totalShares(),           totalShares);
+        assertEq(strategyManager.totalPendingShares(),    pendingShares);
+
+        assertEq(strategyManager.sharesOf(poolManager),        totalShares);
+        assertEq(strategyManager.assetsOf(poolManager),        totalAum);
+        assertEq(strategyManager.pendingSharesOf(poolManager), pendingShares);
+
+        /**********************************************************************************************************************************/
+        /*** Step 2: Cancel redemption                                                                                                  ***/
+        /**********************************************************************************************************************************/
+
+        uint256 sharesToCancel = 4;
+        uint256 impairedAssets = 23;
+
+        // NOTE: Pool delegate can cancel redemptions even during impairments.
+        MockStrategy(underlyingStrategy).__setImpairedAssets(impairedAssets);
+        MockStrategy(underlyingStrategy).__setUnrealizedLosses(impairedAssets);
+
+        vm.expectEmit();
+        emit IMapleStrategyManager.RedemptionCancelled(poolManager, sharesToCancel);
+
+        vm.prank(poolDelegate);
         strategyManager.cancelRedemption(poolManager, sharesToCancel);
 
         assertEq(strategyManager.assetsUnderManagement(), totalAum);

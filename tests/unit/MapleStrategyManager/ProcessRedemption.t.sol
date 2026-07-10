@@ -39,6 +39,22 @@ contract ProcessRedemptionFailureTests is TestBase {
         strategyManager.processRedemption(poolManager, 1, "");
     }
 
+    function test_processRedemption_revert_impairment_liquidityBot() external {
+        MockStrategy(underlyingStrategy).__setImpairedAssets(1);
+
+        vm.prank(liquidityBot);
+        vm.expectRevert("MSM:NOT_OPERATOR");
+        strategyManager.processRedemption(poolManager, 1, "");
+    }
+
+    function test_processRedemption_revert_impairment_liquidityRouter() external {
+        MockStrategy(underlyingStrategy).__setImpairedAssets(1);
+
+        vm.prank(liquidityRouter);
+        vm.expectRevert("MSM:NOT_OPERATOR");
+        strategyManager.processRedemption(poolManager, 1, "");
+    }
+
     function test_processRedemption_revert_invalidPMFactory() external {
         address otherFactory     = address(new MockPoolManagerFactory());
         address otherPoolManager = address(new MockPoolManager());
@@ -158,9 +174,9 @@ contract ProcessRedemptionFailureTests is TestBase {
     }
 
     function test_processRedemption_revert_zeroAssets_unrealizedLossesExceedAum() external {
-        uint256 totalAum         = 100;
-        uint256 totalShares      = 10;
-        uint256 unrealizedLosses = 200;
+        uint256 totalAum       = 100;
+        uint256 totalShares    = 10;
+        uint256 impairedAssets = 200;
 
         setStrategyManagerState({
             aum_:         totalAum,
@@ -169,11 +185,12 @@ contract ProcessRedemptionFailureTests is TestBase {
 
         strategyManager.__setSharesOf(poolManager, totalShares);
 
-        MockStrategy(underlyingStrategy).__setUnrealizedLosses(unrealizedLosses);
+        MockStrategy(underlyingStrategy).__setImpairedAssets(impairedAssets);
+        MockStrategy(underlyingStrategy).__setUnrealizedLosses(impairedAssets);
 
         uint256 sharesRequested = 5;
 
-        vm.prank(liquidityBot);
+        vm.prank(poolDelegate);
         strategyManager.requestRedeem(poolManager, sharesRequested);
 
         assertEq(strategyManager.assetsUnderManagement(),          totalAum);
@@ -186,7 +203,7 @@ contract ProcessRedemptionFailureTests is TestBase {
         assertEq(strategyManager.unrealizedLossesOf(poolManager),  totalAum);
         assertEq(strategyManager.convertToExitAssets(totalShares), 0);
 
-        vm.prank(liquidityBot);
+        vm.prank(strategyDelegate);
         vm.expectRevert("MSM:PR:ZERO_ASSETS");
         strategyManager.processRedemption(poolManager, sharesRequested, "");
     }
@@ -560,9 +577,9 @@ contract ProcessRedemptionSuccessTests is TestBase {
     }
 
     function test_processRedemption_success_usesExitAssets() external {
-        uint256 totalAum         = 100;
-        uint256 totalShares      = 10;
-        uint256 unrealizedLosses = 20;
+        uint256 totalAum       = 100;
+        uint256 totalShares    = 10;
+        uint256 impairedAssets = 20;
 
         setStrategyManagerState({
             aum_:         totalAum,
@@ -571,7 +588,8 @@ contract ProcessRedemptionSuccessTests is TestBase {
 
         strategyManager.__setSharesOf(poolManager, totalShares);
 
-        MockStrategy(underlyingStrategy).__setUnrealizedLosses(unrealizedLosses);
+        MockStrategy(underlyingStrategy).__setImpairedAssets(impairedAssets);
+        MockStrategy(underlyingStrategy).__setUnrealizedLosses(impairedAssets);
 
         assertEq(strategyManager.assetsUnderManagement(),          totalAum);
         assertEq(strategyManager.totalShares(),                    totalShares);
@@ -579,8 +597,8 @@ contract ProcessRedemptionSuccessTests is TestBase {
         assertEq(strategyManager.sharesOf(poolManager),            totalShares);
         assertEq(strategyManager.assetsOf(poolManager),            totalAum);
         assertEq(strategyManager.pendingSharesOf(poolManager),     0);
-        assertEq(strategyManager.unrealizedLossesOf(poolManager),  unrealizedLosses);
-        assertEq(strategyManager.convertToExitAssets(totalShares), totalAum - unrealizedLosses);
+        assertEq(strategyManager.unrealizedLossesOf(poolManager),  impairedAssets);
+        assertEq(strategyManager.convertToExitAssets(totalShares), totalAum - impairedAssets);
 
         assertEq(MockERC20(asset).balanceOf(pool), 0);
 
@@ -590,7 +608,7 @@ contract ProcessRedemptionSuccessTests is TestBase {
 
         uint256 sharesRequested = 5;
 
-        vm.prank(liquidityBot);
+        vm.prank(strategyDelegate);
         strategyManager.requestRedeem(poolManager, sharesRequested);
 
         assertEq(strategyManager.assetsUnderManagement(),          totalAum);
@@ -599,8 +617,8 @@ contract ProcessRedemptionSuccessTests is TestBase {
         assertEq(strategyManager.sharesOf(poolManager),            totalShares);
         assertEq(strategyManager.assetsOf(poolManager),            totalAum);
         assertEq(strategyManager.pendingSharesOf(poolManager),     sharesRequested);
-        assertEq(strategyManager.unrealizedLossesOf(poolManager),  unrealizedLosses);
-        assertEq(strategyManager.convertToExitAssets(totalShares), totalAum - unrealizedLosses);
+        assertEq(strategyManager.unrealizedLossesOf(poolManager),  impairedAssets);
+        assertEq(strategyManager.convertToExitAssets(totalShares), totalAum - impairedAssets);
 
         /**********************************************************************************************************************************/
         /*** Step 2: Process redemption at exit rate                                                                                    ***/
@@ -613,7 +631,7 @@ contract ProcessRedemptionSuccessTests is TestBase {
         vm.expectEmit();
         emit IMapleStrategyManager.RedemptionProcessed(poolManager, sharesRequested, assetsExpected);
 
-        vm.prank(liquidityBot);
+        vm.prank(strategyDelegate);
         strategyManager.processRedemption(poolManager, sharesRequested, "");
 
         assertEq(strategyManager.assetsUnderManagement(),                            totalAum - assetsExpected);
@@ -622,8 +640,8 @@ contract ProcessRedemptionSuccessTests is TestBase {
         assertEq(strategyManager.sharesOf(poolManager),                              totalShares - sharesRequested);
         assertEq(strategyManager.assetsOf(poolManager),                              totalAum - assetsExpected);
         assertEq(strategyManager.pendingSharesOf(poolManager),                       0);
-        assertEq(strategyManager.unrealizedLossesOf(poolManager),                    unrealizedLosses);
-        assertEq(strategyManager.convertToExitAssets(totalShares - sharesRequested), totalAum - assetsExpected - unrealizedLosses);
+        assertEq(strategyManager.unrealizedLossesOf(poolManager),                    impairedAssets);
+        assertEq(strategyManager.convertToExitAssets(totalShares - sharesRequested), totalAum - assetsExpected - impairedAssets);
 
         assertEq(MockERC20(asset).balanceOf(pool), assetsExpected);
     }

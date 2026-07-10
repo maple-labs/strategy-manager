@@ -39,6 +39,22 @@ contract FundStrategyManagerFailureTests is TestBase {
         strategyManager.fundStrategyManager(poolManager, 1, "");
     }
 
+    function test_fundStrategyManager_revert_impairment_liquidityBot() external {
+        MockStrategy(underlyingStrategy).__setImpairedAssets(1);
+
+        vm.prank(liquidityBot);
+        vm.expectRevert("MSM:NOT_OPERATOR");
+        strategyManager.fundStrategyManager(poolManager, 1, "");
+    }
+
+    function test_fundStrategyManager_revert_impairment_liquidityRouter() external {
+        MockStrategy(underlyingStrategy).__setImpairedAssets(1);
+
+        vm.prank(liquidityRouter);
+        vm.expectRevert("MSM:NOT_OPERATOR");
+        strategyManager.fundStrategyManager(poolManager, 1, "");
+    }
+
     function test_fundStrategyManager_revert_notActive() external {
         strategyManager.__setActive(false);
 
@@ -748,18 +764,19 @@ contract FundStrategyManagerSuccessTests is TestBase {
     function test_fundStrategyManager_success_secondFunding_strategyHasImpairment_exchangeRateUnaffected() external {
         uint256 totalSharesBeforeFund           = 100;
         uint256 assetsUnderManagementBeforeFund = 200;
-        uint256 unrealizedLosses                = 50;
+        uint256 impairedAssets                  = 50;
 
         setStrategyManagerState({
             aum_:         assetsUnderManagementBeforeFund,
             totalShares_: totalSharesBeforeFund
         });
 
-        MockStrategy(underlyingStrategy).__setUnrealizedLosses(unrealizedLosses);
+        MockStrategy(underlyingStrategy).__setImpairedAssets(impairedAssets);
+        MockStrategy(underlyingStrategy).__setUnrealizedLosses(impairedAssets);
 
         assertEq(strategyManager.assetsUnderManagement(), assetsUnderManagementBeforeFund);
         assertEq(strategyManager.totalShares(),           totalSharesBeforeFund);
-        assertEq(strategyManager.unrealizedLosses(),      unrealizedLosses);
+        assertEq(strategyManager.unrealizedLosses(),      impairedAssets);
 
         assertEq(strategyManager.sharesOf(poolManager), 0);
         assertEq(strategyManager.assetsOf(poolManager), 0);
@@ -772,12 +789,12 @@ contract FundStrategyManagerSuccessTests is TestBase {
         vm.expectEmit();
         emit IMapleStrategyManager.StrategyManagerFunded(poolManager, assetsToFund, assetsToFund, expectedSharesToReceive);
 
-        vm.prank(liquidityBot);
+        vm.prank(strategyDelegate);
         strategyManager.fundStrategyManager(poolManager, assetsToFund, "");
 
         assertEq(strategyManager.assetsUnderManagement(), assetsUnderManagementBeforeFund + assetsToFund);
         assertEq(strategyManager.totalShares(),           totalSharesBeforeFund + expectedSharesToReceive);
-        assertEq(strategyManager.unrealizedLosses(),      unrealizedLosses);
+        assertEq(strategyManager.unrealizedLosses(),      impairedAssets);
 
         assertEq(strategyManager.sharesOf(poolManager), expectedSharesToReceive);
         assertEq(strategyManager.assetsOf(poolManager), assetsToFund);

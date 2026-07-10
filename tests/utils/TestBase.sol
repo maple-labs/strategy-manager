@@ -26,6 +26,7 @@ contract TestBase is Test {
     address liquidityBot     = makeAddr("liquidityBot");
     address liquidityRouter  = makeAddr("liquidityRouter");
     address operationalAdmin = makeAddr("operationalAdmin");
+    address poolDelegate     = makeAddr("poolDelegate");
     address securityAdmin    = makeAddr("securityAdmin");
     address strategyDelegate = makeAddr("strategyDelegate");
 
@@ -61,6 +62,7 @@ contract TestBase is Test {
 
         MockPoolManager(poolManager).__setFactory(poolManagerFactory);
         MockPoolManager(poolManager).__setPool(pool);
+        MockPoolManager(poolManager).__setPoolDelegate(poolDelegate);
         MockPoolManagerFactory(poolManagerFactory).__setIsInstance(poolManager, true);
 
         MockStrategy(underlyingStrategy).__setFundsAsset(address(asset));

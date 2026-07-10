@@ -51,9 +51,16 @@ contract MulticallFailureTests is TestBase {
     }
 
     function test_multicall_revert_notOperator() external {
-        calls.push(abi.encodeCall(MapleStrategyManager.requestRedeem, (poolManager, 1)));
+        calls.push(abi.encodeCall(MapleStrategyManager.fundStrategyManager, (poolManager, 1, "")));
 
         vm.expectRevert("MSM:NOT_OPERATOR");
+        strategyManager.multicall(calls);
+    }
+
+    function test_multicall_revert_notOperatorOrPoolDelegate() external {
+        calls.push(abi.encodeCall(MapleStrategyManager.requestRedeem, (poolManager, 1)));
+
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_PD");
         strategyManager.multicall(calls);
     }
 

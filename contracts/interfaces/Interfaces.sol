@@ -31,6 +31,18 @@ interface IProxyFactoryLike {
 
 }
 
+interface IPoolManagerLike {
+
+    function factory() external view returns (address factory);
+
+    function pool() external view returns (address pool);
+
+    function poolDelegate() external view returns (address poolDelegate);
+
+    function requestFunds(address destination, uint256 principal) external;
+
+}
+
 interface IStrategyLike {
 
     function strategyManager() external view returns (address strategyManager);
@@ -51,16 +63,6 @@ interface IStrategyManagerLike {
 
 }
 
-interface IPoolManagerLike {
-
-    function factory() external view returns (address factory);
-
-    function pool() external view returns (address pool);
-
-    function requestFunds(address destination, uint256 principal) external;
-
-}
-
 interface IUnderlyingStrategyLike {
 
     function availableToWithdraw() external view returns (uint256 availableToWithdraw);
@@ -70,6 +72,8 @@ interface IUnderlyingStrategyLike {
     function fundsAsset() external view returns (address fundsAsset);
 
     function fundUnderlyingStrategy(uint256 assets, bytes calldata data) external returns (uint256 amount);
+
+    function impairedAssets() external view returns (uint256 impairedAssets);
 
     function unrealizedLosses() external view returns (uint256 unrealizedLosses);
 

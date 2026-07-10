@@ -88,6 +88,7 @@ contract MockPoolManager {
 
     address public factory;
     address public pool;
+    address public poolDelegate;
 
     function requestFunds(address, uint256) external {}
 
@@ -97,6 +98,10 @@ contract MockPoolManager {
 
     function __setPool(address pool_) external {
         pool = pool_;
+    }
+
+    function __setPoolDelegate(address poolDelegate_) external {
+        poolDelegate = poolDelegate_;
     }
 
 }
@@ -289,6 +294,7 @@ contract MockStrategy {
 
     uint256 public assetsUnderManagement;
     uint256 public availableToWithdraw;
+    uint256 public impairedAssets;
     uint256 public unrealizedLosses;
 
     uint256 internal _fundReturn;
@@ -309,6 +315,10 @@ contract MockStrategy {
 
     function __setFundUnderlyingStrategyReturn(uint256 fundReturn_) external {
         _fundReturn = fundReturn_;
+    }
+
+    function __setImpairedAssets(uint256 impairedAssets_) external {
+        impairedAssets = impairedAssets_;
     }
 
     function __setUnrealizedLosses(uint256 unrealizedLosses_) external {

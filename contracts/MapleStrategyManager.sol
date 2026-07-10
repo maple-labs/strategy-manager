@@ -51,13 +51,15 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     }
 
     modifier onlyOperator() {
-        address globals_ = globals();
+        require(_isOperator(), "MSM:NOT_OPERATOR");
 
+        _;
+    }
+
+    modifier onlyOperatorOrPoolDelegate(address poolManager_) {
         require(
-            IGlobalsLike(globals_).isInstanceOf("LIQUIDITY_BOT",    msg.sender) ||
-            IGlobalsLike(globals_).isInstanceOf("LIQUIDITY_ROUTER", msg.sender) ||
-            msg.sender == strategyDelegate,
-            "MSM:NOT_OPERATOR"
+            _isOperator() || msg.sender == IPoolManagerLike(poolManager_).poolDelegate(),
+            "MSM:NOT_OPERATOR_OR_PD"
         );
 
         _;
@@ -153,7 +155,13 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /*** Liquidity Management Functions                                                                                                ***/
     /**************************************************************************************************************************************/
 
-    function cancelRedemption(address poolManager_, uint256 shares_) external override whenNotPaused nonReentrant onlyOperator {
+    function cancelRedemption(
+        address poolManager_,
+        uint256 shares_
+    )
+        external override whenNotPaused nonReentrant onlyOperatorOrPoolDelegate(poolManager_)
+    {
+        require(_isValidPoolManager(poolManager_),        "MSM:CR:INVALID_PM");
         require(shares_ != 0,                             "MSM:CR:ZERO_SHARES");
         require(shares_ <= pendingSharesOf[poolManager_], "MSM:CR:INSUFFICIENT_SHARES");
 
@@ -224,7 +232,12 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         emit RedemptionProcessed(poolManager_, shares_, assets_);
     }
 
-    function requestRedeem(address poolManager_, uint256 shares_) external override whenNotPaused nonReentrant onlyOperator {
+    function requestRedeem(
+        address poolManager_,
+        uint256 shares_
+    )
+        external override whenNotPaused nonReentrant onlyOperatorOrPoolDelegate(poolManager_)
+    {
         require(_isValidPoolManager(poolManager_), "MSM:RR:INVALID_PM");
 
         uint256 remainingShares_ = sharesOf[poolManager_] - pendingSharesOf[poolManager_];
@@ -365,6 +378,19 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
 
     function _divRoundUp(uint256 numerator_, uint256 divisor_) internal pure returns (uint256 result_) {
         result_ = (numerator_ + divisor_ - 1) / divisor_;
+    }
+
+    function _isOperator() internal view returns (bool isOperator_) {
+        if (msg.sender == strategyDelegate) return true;
+
+        // NOTE: Bots can not operate on impaired strategies.
+        if (IUnderlyingStrategyLike(underlyingStrategy).impairedAssets() != 0) return false;
+
+        address globals_ = globals();
+
+        isOperator_ =
+            IGlobalsLike(globals_).isInstanceOf("LIQUIDITY_BOT",    msg.sender) ||
+            IGlobalsLike(globals_).isInstanceOf("LIQUIDITY_ROUTER", msg.sender);
     }
 
     function _isValidPoolManager(address poolManager_) internal view returns (bool isValid_) {

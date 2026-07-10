@@ -33,11 +33,27 @@ contract RequestRedeemFailureTests is TestBase {
     }
 
     function test_requestRedeem_revert_notAuthorized() external {
-        vm.expectRevert("MSM:NOT_OPERATOR");
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_PD");
         strategyManager.requestRedeem(poolManager, 1);
     }
 
-    function test_requestRedeem_revert_invalidPMFactory() external {
+    function test_requestRedeem_revert_impairment_liquidityBot() external {
+        MockStrategy(underlyingStrategy).__setImpairedAssets(1);
+
+        vm.prank(liquidityBot);
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_PD");
+        strategyManager.requestRedeem(poolManager, 1);
+    }
+
+    function test_requestRedeem_revert_impairment_liquidityRouter() external {
+        MockStrategy(underlyingStrategy).__setImpairedAssets(1);
+
+        vm.prank(liquidityRouter);
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_PD");
+        strategyManager.requestRedeem(poolManager, 1);
+    }
+
+    function test_requestRedeem_revert_invalidPoolManagerFactory() external {
         address otherFactory     = address(new MockPoolManagerFactory());
         address otherPoolManager = address(new MockPoolManager());
 
@@ -49,13 +65,26 @@ contract RequestRedeemFailureTests is TestBase {
         strategyManager.requestRedeem(otherPoolManager, 1);
     }
 
-    function test_requestRedeem_revert_invalidPM() external {
+    function test_requestRedeem_revert_invalidPoolManager() external {
         address otherPoolManager = address(new MockPoolManager());
 
         MockPoolManager(otherPoolManager).__setFactory(poolManagerFactory);
 
         vm.prank(liquidityBot);
         vm.expectRevert("MSM:RR:INVALID_PM");
+        strategyManager.requestRedeem(otherPoolManager, 1);
+    }
+
+    function test_requestRedeem_revert_wrongPoolDelegate() external {
+        address otherPoolManager  = address(new MockPoolManager());
+        address otherPoolDelegate = makeAddr("otherPoolDelegate");
+
+        MockPoolManager(otherPoolManager).__setFactory(poolManagerFactory);
+        MockPoolManager(otherPoolManager).__setPoolDelegate(otherPoolDelegate);
+        MockPoolManagerFactory(poolManagerFactory).__setIsInstance(otherPoolManager, true);
+
+        vm.prank(poolDelegate);
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_PD");
         strategyManager.requestRedeem(otherPoolManager, 1);
     }
 
@@ -140,11 +169,56 @@ contract RequestRedeemSuccessTests is TestBase {
         assertEq(strategyManager.pendingSharesOf(poolManager), 0);
 
         uint256 sharesToRedeem = 5;
+        uint256 impairedAssets = 23;
+
+        // NOTE: Strategy delegate can request redemptions even during impairments.
+        MockStrategy(underlyingStrategy).__setImpairedAssets(impairedAssets);
+        MockStrategy(underlyingStrategy).__setUnrealizedLosses(impairedAssets);
 
         vm.expectEmit();
         emit IMapleStrategyManager.RedemptionRequested(poolManager, sharesToRedeem);
 
         vm.prank(strategyDelegate);
+        strategyManager.requestRedeem(poolManager, sharesToRedeem);
+
+        assertEq(strategyManager.assetsUnderManagement(), totalAum);
+        assertEq(strategyManager.totalShares(),           totalShares);
+        assertEq(strategyManager.totalPendingShares(),    sharesToRedeem);
+
+        assertEq(strategyManager.sharesOf(poolManager),        totalShares);
+        assertEq(strategyManager.assetsOf(poolManager),        totalAum);
+        assertEq(strategyManager.pendingSharesOf(poolManager), sharesToRedeem);
+    }
+
+    function test_requestRedeem_success_calledByPoolDelegate() external {
+        uint256 totalAum    = 100;
+        uint256 totalShares = 10;
+
+        setStrategyManagerState({
+            aum_:         totalAum,
+            totalShares_: totalShares
+        });
+        strategyManager.__setSharesOf(poolManager, totalShares);
+
+        assertEq(strategyManager.assetsUnderManagement(), totalAum);
+        assertEq(strategyManager.totalShares(),           totalShares);
+        assertEq(strategyManager.totalPendingShares(),    0);
+
+        assertEq(strategyManager.sharesOf(poolManager),        totalShares);
+        assertEq(strategyManager.assetsOf(poolManager),        totalAum);
+        assertEq(strategyManager.pendingSharesOf(poolManager), 0);
+
+        uint256 sharesToRedeem = 5;
+        uint256 impairedAssets = 23;
+
+        // NOTE: Pool delegate can request redemptions even during impairments.
+        MockStrategy(underlyingStrategy).__setImpairedAssets(impairedAssets);
+        MockStrategy(underlyingStrategy).__setUnrealizedLosses(impairedAssets);
+
+        vm.expectEmit();
+        emit IMapleStrategyManager.RedemptionRequested(poolManager, sharesToRedeem);
+
+        vm.prank(poolDelegate);
         strategyManager.requestRedeem(poolManager, sharesToRedeem);
 
         assertEq(strategyManager.assetsUnderManagement(), totalAum);

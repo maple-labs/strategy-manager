@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 interface IGlobalsLike {
 
+    function bootstrapMint(address asset) external view returns (uint256 bootstrapMint);
+
     function canDeploy(address caller) external view returns (bool);
 
     function governor() external view returns (address);
@@ -18,6 +20,12 @@ interface IGlobalsLike {
     function securityAdmin() external view returns (address);
 
     function transferOwnedStrategyManager(address fromStrategyDelegate, address toStrategyDelegate) external;
+
+}
+
+interface IERC20Like {
+
+    function transferFrom(address owner, address recipient, uint256 amount) external returns (bool success);
 
 }
 

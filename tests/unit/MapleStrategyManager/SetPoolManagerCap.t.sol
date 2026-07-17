@@ -199,7 +199,7 @@ contract SetPoolManagerCapSuccessTests is TestBase {
         vm.expectEmit();
         emit IMapleStrategyManager.StrategyManagerConfigurationComplete();
 
-        strategyManager.completeConfiguration();
+        strategyManager.completeConfiguration(0, "");
 
         assertEq(strategyManager.configured(),                  true);
         assertEq(strategyManager.poolManagerCapOf(poolManager), initialCap);

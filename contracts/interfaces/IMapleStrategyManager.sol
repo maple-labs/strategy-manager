@@ -98,9 +98,11 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     /**************************************************************************************************************************************/
 
     /**
-     *  @dev Complete the configuration.
+     *  @dev   Complete the configuration.
+     *  @param bootstrapAssets      Amount of assets to use to bootstrap the strategy manager.
+     *  @param bootstrapFundingData Arbitrary data forwarded to the underlying strategy on `fundUnderlyingStrategy`.
      */
-    function completeConfiguration() external;
+    function completeConfiguration(uint256 bootstrapAssets, bytes calldata bootstrapFundingData) external;
 
     /**
      *  @dev   Sets the underlying strategy during deployment before configuration is complete.

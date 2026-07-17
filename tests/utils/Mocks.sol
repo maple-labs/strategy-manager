@@ -20,6 +20,8 @@ contract MockGlobals {
 
     mapping(address => bool) public canDeploy;
 
+    mapping(address => uint256) public bootstrapMint;
+
     mapping(bytes4 => bool) public isFunctionPaused;
 
     mapping(bytes32 => mapping(address => bool)) public isInstanceOf;
@@ -27,6 +29,10 @@ contract MockGlobals {
     mapping(address => bool) public isStrategyDelegate;
 
     mapping(address => address) public strategyDelegateOf;
+
+    function __setBootstrapMint(address asset_, uint256 bootstrapMint_) external {
+        bootstrapMint[asset_] = bootstrapMint_;
+    }
 
     function __setCanDeploy(address caller_, bool canDeploy_) external {
         canDeploy[caller_] = canDeploy_;
@@ -197,9 +203,14 @@ contract MockReentrantStrategyManager is MockStrategyManager {
 
 contract MockStrategyFactory is MapleProxyFactory {
 
+    address public fundsAsset;
     address public invalidInstance;
 
     constructor(address globals_) MapleProxyFactory(globals_) {}
+
+    function __setFundsAsset(address fundsAsset_) external {
+        fundsAsset = fundsAsset_;
+    }
 
     function __setInvalidInstance(address invalidInstance_) external {
         invalidInstance = invalidInstance_;
@@ -231,9 +242,24 @@ contract MockERC20 {
 
     uint256 public totalSupply;
 
+    bool public transferFromReturn = true;
+
+    function __setTransferFromReturn(bool transferFromReturn_) external {
+        transferFromReturn = transferFromReturn_;
+    }
+
     function transfer(address to_, uint256 amount_) external returns (bool success_) {
         balanceOf[msg.sender] -= amount_;
         balanceOf[to_]        += amount_;
+
+        return true;
+    }
+
+    function transferFrom(address from_, address to_, uint256 amount_) external returns (bool success_) {
+        if (!transferFromReturn) return false;
+
+        balanceOf[from_] -= amount_;
+        balanceOf[to_]   += amount_;
 
         return true;
     }
@@ -256,6 +282,14 @@ contract MockDeployableStrategy is MapleProxiedInternals {
 
     function factory() external view returns (address factory_) {
         factory_ = _factory();
+    }
+
+    function fundsAsset() external view returns (address fundsAsset_) {
+        fundsAsset_ = MockStrategyFactory(_factory()).fundsAsset();
+    }
+
+    function fundUnderlyingStrategy(uint256 assets_, bytes calldata) external pure returns (uint256 assetsDeposited_) {
+        assetsDeposited_ = assets_;
     }
 
     function implementation() external view returns (address implementation_) {

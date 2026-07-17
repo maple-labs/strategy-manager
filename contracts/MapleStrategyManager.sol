@@ -96,8 +96,22 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /**************************************************************************************************************************************/
 
     // NOTE: This function is always called atomically during the deployment process so a DoS attack is not possible.
-    function completeConfiguration() external override whenNotPaused {
+    function completeConfiguration(uint256 bootstrapAssets_, bytes calldata bootstrapFundingData_)
+        external override whenNotPaused nonReentrant
+    {
         require(!configured, "MSM:CC:ALREADY_CONFIGURED");
+
+        if (bootstrapAssets_ != 0) {
+            uint256 assetsDeposited_ =
+                IUnderlyingStrategyLike(underlyingStrategy).fundUnderlyingStrategy(bootstrapAssets_, bootstrapFundingData_);
+
+            require(assetsDeposited_ != 0, "MSM:CC:ZERO_ASSETS");
+
+            sharesOf[address(0)] = assetsDeposited_;
+            totalShares          = assetsDeposited_;
+
+            emit StrategyManagerFunded(address(0), bootstrapAssets_, assetsDeposited_, assetsDeposited_);
+        }
 
         configured = true;
 

@@ -23,11 +23,16 @@ interface IMapleStrategyDeployer {
      *  @param  strategyManagerFactory Address of the strategy manager factory.
      *  @param  strategyFactory        Address of the underlying strategy factory.
      *  @param  strategyDeploymentData Strategy initialization data.
+     *  @param  bootstrapFundingData   Data forwarded to the underlying strategy when funding the bootstrap assets.
      *  @return strategyManager        Address of the deployed strategy manager.
      *  @return underlyingStrategy     Address of the deployed underlying strategy.
      */
-    function deploy(address strategyManagerFactory, address strategyFactory, bytes calldata strategyDeploymentData)
-        external returns (address strategyManager, address underlyingStrategy);
+    function deploy(
+        address strategyManagerFactory,
+        address strategyFactory,
+        bytes   calldata strategyDeploymentData,
+        bytes   calldata bootstrapFundingData
+    ) external returns (address strategyManager, address underlyingStrategy);
 
     /**
      *  @dev    Returns the address of the Maple globals contract.

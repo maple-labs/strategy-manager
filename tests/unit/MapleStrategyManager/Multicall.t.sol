@@ -170,10 +170,16 @@ contract MulticallSuccessTests is TestBase {
     }
 
     function test_multicall_success_unconfigured() external {
+        uint256 bootstrapAssets          = 1e6;
+        uint256 bootstrapDepositedAssets = bootstrapAssets / 3;
+
         address unpermissionedCaller = makeAddr("randomer");
         address newStrategyDelegate  = makeAddr("newStrategyDelegate");
 
         address newUnderlyingStrategy = address(new MockStrategy());
+
+        MockStrategy(newUnderlyingStrategy).__setFundsAsset(address(asset));
+        MockStrategy(newUnderlyingStrategy).__setFundUnderlyingStrategyReturn(bootstrapDepositedAssets);
 
         uint256 poolManagerCap       = 1_000e6;
         uint256 strategyLiquidityCap = 5_000e6;
@@ -184,13 +190,17 @@ contract MulticallSuccessTests is TestBase {
         calls.push(abi.encodeCall(MapleStrategyManager.setPoolManagerCap,          (poolManager, poolManagerCap)));
         calls.push(abi.encodeCall(MapleStrategyManager.setStrategyLiquidityCap,    (strategyLiquidityCap)));
         calls.push(abi.encodeCall(MapleStrategyManager.setPendingStrategyDelegate, (newStrategyDelegate)));
-        calls.push(abi.encodeCall(MapleStrategyManager.completeConfiguration,      ()));
+        calls.push(abi.encodeCall(MapleStrategyManager.completeConfiguration,      (bootstrapAssets, "")));
 
         assertEq(strategyManager.underlyingStrategy(),          underlyingStrategy);
         assertEq(strategyManager.poolManagerCapOf(poolManager), 0);
         assertEq(strategyManager.strategyLiquidityCap(),        0);
         assertEq(strategyManager.pendingStrategyDelegate(),     address(0));
         assertEq(strategyManager.configured(),                  false);
+
+        assertEq(strategyManager.assetsUnderManagement(), 0);
+        assertEq(strategyManager.totalShares(),           0);
+        assertEq(strategyManager.sharesOf(address(0)),    0);
 
         vm.prank(unpermissionedCaller);
         strategyManager.multicall(calls);
@@ -200,6 +210,10 @@ contract MulticallSuccessTests is TestBase {
         assertEq(strategyManager.strategyLiquidityCap(),        strategyLiquidityCap);
         assertEq(strategyManager.pendingStrategyDelegate(),     newStrategyDelegate);
         assertEq(strategyManager.configured(),                  true);
+
+        assertEq(strategyManager.assetsUnderManagement(), bootstrapDepositedAssets);
+        assertEq(strategyManager.totalShares(),           bootstrapDepositedAssets);
+        assertEq(strategyManager.sharesOf(address(0)),    bootstrapDepositedAssets);
     }
 
 }

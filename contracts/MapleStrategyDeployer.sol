@@ -3,9 +3,15 @@ pragma solidity 0.8.28;
 
 import { IMapleProxyFactory } from "../modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
 
-import { IGlobalsLike, IStrategyLike } from "./interfaces/Interfaces.sol";
-import { IMapleStrategyDeployer }      from "./interfaces/IMapleStrategyDeployer.sol";
-import { IMapleStrategyManager }       from "./interfaces/IMapleStrategyManager.sol";
+import { IMapleStrategyDeployer } from "./interfaces/IMapleStrategyDeployer.sol";
+import { IMapleStrategyManager }  from "./interfaces/IMapleStrategyManager.sol";
+
+import {
+    IERC20Like,
+    IGlobalsLike,
+    IStrategyLike,
+    IUnderlyingStrategyLike
+} from "./interfaces/Interfaces.sol";
 
 contract MapleStrategyDeployer is IMapleStrategyDeployer {
 
@@ -25,7 +31,12 @@ contract MapleStrategyDeployer is IMapleStrategyDeployer {
     /*** Deployment Functions                                                                                                           ***/
     /**************************************************************************************************************************************/
 
-    function deploy(address strategyManagerFactory_, address strategyFactory_, bytes calldata strategyDeploymentData_)
+    function deploy(
+        address        strategyManagerFactory_,
+        address        strategyFactory_,
+        bytes calldata strategyDeploymentData_,
+        bytes calldata bootstrapFundingData_
+    )
         external override returns (address strategyManager_, address underlyingStrategy_)
     {
         address      strategyDelegate_ = msg.sender;
@@ -50,7 +61,17 @@ contract MapleStrategyDeployer is IMapleStrategyDeployer {
         require(IMapleStrategyManager(strategyManager_).underlyingStrategy() == underlyingStrategy_, "MSD:D:INVALID_STRATEGY");
         require(IStrategyLike(underlyingStrategy_).strategyManager()         == strategyManager_,    "MSD:D:INVALID_STRATEGY_MANAGER");
 
-        IMapleStrategyManager(strategyManager_).completeConfiguration();
+        address fundsAsset_      = IUnderlyingStrategyLike(underlyingStrategy_).fundsAsset();
+        uint256 bootstrapAssets_ = globals_.bootstrapMint(fundsAsset_);
+
+        if (bootstrapAssets_ != 0) {
+            require(
+                IERC20Like(fundsAsset_).transferFrom(strategyDelegate_, underlyingStrategy_, bootstrapAssets_),
+                "MSD:D:BOOTSTRAP_TRANSFER_FAILED"
+            );
+        }
+
+        IMapleStrategyManager(strategyManager_).completeConfiguration(bootstrapAssets_, bootstrapFundingData_);
 
         emit StrategyManagerDeployed(strategyDelegate_, strategyManager_, underlyingStrategy_);
     }

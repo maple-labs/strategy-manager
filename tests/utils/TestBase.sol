@@ -86,7 +86,7 @@ contract TestBase is Test {
         MockGlobals(globals).__setStrategyDelegate(address(strategyManager), strategyDelegate);
 
         strategyManager.setUnderlyingStrategy(underlyingStrategy);
-        strategyManager.completeConfiguration();
+        strategyManager.completeConfiguration(0, "");
         strategyManager.__setActive(true);
     }
 

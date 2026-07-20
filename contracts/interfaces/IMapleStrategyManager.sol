@@ -15,9 +15,11 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     /**************************************************************************************************************************************/
 
     /**
-     *  @dev   Emitted when a pool manager's maximum asset position is set.
+     *  @dev   Emitted when a pool manager's maximum asset position is set. Zero means no cap is set,
+     *         and `type(uint256).max` means the pool manager is blocked entirely.
      *  @param poolManager Address of the pool manager whose cap was set.
-     *  @param cap         The maximum asset position the pool manager is authorized to hold.
+     *  @param cap         The maximum asset position the pool manager is authorized to hold, with Zero meaning no cap is set
+     *                     and type(uint256).max meaning the pool manager is completely blocked.
      */
     event PoolManagerCapSet(address indexed poolManager, uint256 cap);
 
@@ -138,6 +140,9 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
 
     /**
      *  @dev   Pulls assets from a pool manager into the underlying strategy and credits the pool manager with shares.
+     *         If a non-zero cap is set for the pool manager (see `setPoolManagerCap`), the resulting asset position
+     *         must not exceed it. A cap of zero is treated as unset and imposes no limit. A cap of `type(uint256).max`
+     *         blocks the pool manager entirely, so any funding reverts.
      *  @param poolManager Address of the pool manager being funded.
      *  @param assetsIn    Amount of assets to pull from the pool.
      *  @param data        Arbitrary data forwarded to the underlying strategy on `fundUnderlyingStrategy`.
@@ -179,8 +184,12 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
 
     /**
      *  @dev   Sets the maximum asset position a pool manager can have in the strategy manager.
+     *         Setting the cap to zero unsets it, meaning the pool manager has no limit and funding
+     *         is bounded only by the strategy liquidity cap. Setting the cap to `type(uint256).max`
+     *         blocks the pool manager entirely.
      *  @param poolManager Address of the pool manager whose cap is being set.
-     *  @param cap         Maximum asset position the pool manager can have in the strategy manager.
+     *  @param cap         Maximum asset position the pool manager can have in the strategy manager. Zero means no cap,
+     *                     `type(uint256).max` means the pool manager is blocked.
      */
     function setPoolManagerCap(address poolManager, uint256 cap) external;
 

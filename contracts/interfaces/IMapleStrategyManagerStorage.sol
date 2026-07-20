@@ -20,8 +20,12 @@ interface IMapleStrategyManagerStorage {
 
     /**
      *  @dev    Returns the per-pool-manager maximum asset position for a given pool manager.
+     *          A value of zero means no cap is set and the pool manager has no limit, and funding
+     *          is bounded only by the strategy liquidity cap. A value of `type(uint256).max` means the
+     *          pool manager is blocked entirely.
      *  @param  poolManager      Address of the pool manager.
-     *  @return poolManagerCapOf The maximum asset position the pool manager is authorized to hold.
+     *  @return poolManagerCapOf The maximum asset position the pool manager is authorized to hold. Zero means no cap,
+     *                           `type(uint256).max` means the pool manager is blocked.
      */
     function poolManagerCapOf(address poolManager) external view returns (uint256 poolManagerCapOf);
 

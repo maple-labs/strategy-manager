@@ -22,6 +22,8 @@ interface IMapleStrategyDeployer {
      *  @dev    Deploys a strategy manager and underlying strategy.
      *  @param  strategyManagerFactory Address of the strategy manager factory.
      *  @param  strategyFactory        Address of the underlying strategy factory.
+     *  @param  strategyLiquidityCap   Maximum total asset position the strategy manager can hold. A value of zero is
+     *                                 left unset and can be configured later by an admin.
      *  @param  strategyDeploymentData Strategy initialization data.
      *  @param  bootstrapFundingData   Data forwarded to the underlying strategy when funding the bootstrap assets.
      *  @return strategyManager        Address of the deployed strategy manager.
@@ -30,6 +32,7 @@ interface IMapleStrategyDeployer {
     function deploy(
         address strategyManagerFactory,
         address strategyFactory,
+        uint256 strategyLiquidityCap,
         bytes   calldata strategyDeploymentData,
         bytes   calldata bootstrapFundingData
     ) external returns (address strategyManager, address underlyingStrategy);

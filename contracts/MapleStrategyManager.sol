@@ -192,10 +192,6 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         require(assetsIn_ != 0,                    "MSM:FSM:ZERO_ASSETS");
         require(_isValidPoolManager(poolManager_), "MSM:FSM:INVALID_PM");
 
-        uint256 poolManagerCap_ = poolManagerCapOf[poolManager_];
-
-        require(poolManagerCap_ != 0, "MSM:FSM:PM_ZERO_CAP");
-
         address underlyingStrategy_ = underlyingStrategy;
         uint256 totalAssetsBefore_  = assetsUnderManagement();
 
@@ -209,7 +205,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         sharesOf[poolManager_] += sharesMinted_;
         totalShares            += sharesMinted_;
 
-        require(assetsOf(poolManager_)  <= poolManagerCap_,      "MSM:FSM:POOL_MANAGER_CAP");
+        require(_isWithinPoolManagerCap(poolManager_),           "MSM:FSM:POOL_MANAGER_CAP");
         require(assetsUnderManagement() <= strategyLiquidityCap, "MSM:FSM:STRATEGY_LIQUIDITY_CAP");
 
         emit StrategyManagerFunded(poolManager_, assetsIn_, assetsDeposited_, sharesMinted_);
@@ -413,6 +409,17 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         isValid_ =
             IGlobalsLike(globals()).isInstanceOf("POOL_MANAGER_FACTORY", factory_) &&
             IProxyFactoryLike(factory_).isInstance(poolManager_);
+    }
+
+    function _isWithinPoolManagerCap(address poolManager_) internal view returns (bool withinCap_) {
+        uint256 poolManagerCap_ = poolManagerCapOf[poolManager_];
+
+        // A cap of the maximum value means the pool manager is completely blocked and can never be within cap.
+        // A cap of zero means no cap is set, so it is always considered within cap (unlimited).
+        if (poolManagerCap_ == type(uint256).max) return false;
+        if (poolManagerCap_ == 0)                 return true;
+
+        withinCap_ = assetsOf(poolManager_) <= poolManagerCap_;
     }
 
     function _min(uint256 a_, uint256 b_) internal pure returns (uint256 min_) {

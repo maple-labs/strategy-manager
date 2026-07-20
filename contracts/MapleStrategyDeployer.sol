@@ -34,6 +34,7 @@ contract MapleStrategyDeployer is IMapleStrategyDeployer {
     function deploy(
         address        strategyManagerFactory_,
         address        strategyFactory_,
+        uint256        strategyLiquidityCap_,
         bytes calldata strategyDeploymentData_,
         bytes calldata bootstrapFundingData_
     )
@@ -69,6 +70,10 @@ contract MapleStrategyDeployer is IMapleStrategyDeployer {
                 IERC20Like(fundsAsset_).transferFrom(strategyDelegate_, underlyingStrategy_, bootstrapAssets_),
                 "MSD:D:BOOTSTRAP_TRANSFER_FAILED"
             );
+        }
+
+        if (strategyLiquidityCap_ != 0) {
+            IMapleStrategyManager(strategyManager_).setStrategyLiquidityCap(strategyLiquidityCap_);
         }
 
         IMapleStrategyManager(strategyManager_).completeConfiguration(bootstrapAssets_, bootstrapFundingData_);

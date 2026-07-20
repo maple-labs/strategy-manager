@@ -44,7 +44,7 @@ contract DeployFailureTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MSD:D:INVALID_SD");
-        strategyDeployer.deploy(address(factory), address(strategyFactory), abi.encode(false), "");
+        strategyDeployer.deploy(address(factory), address(strategyFactory), 0, abi.encode(false), "");
     }
 
     function test_deploy_revert_invalidStrategyManagerFactory() external {
@@ -52,7 +52,7 @@ contract DeployFailureTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MSD:D:INVALID_SM_FACTORY");
-        strategyDeployer.deploy(address(factory), address(strategyFactory), abi.encode(false), "");
+        strategyDeployer.deploy(address(factory), address(strategyFactory), 0, abi.encode(false), "");
     }
 
     function test_deploy_revert_invalidStrategyFactory() external {
@@ -60,7 +60,7 @@ contract DeployFailureTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MSD:D:INVALID_STRATEGY_FACTORY");
-        strategyDeployer.deploy(address(factory), address(strategyFactory), abi.encode(false), "");
+        strategyDeployer.deploy(address(factory), address(strategyFactory), 0, abi.encode(false), "");
     }
 
     function test_deploy_revert_invalidStrategy() external {
@@ -68,24 +68,24 @@ contract DeployFailureTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MSD:D:INVALID_STRATEGY");
-        strategyDeployer.deploy(address(factory), address(strategyFactory), abi.encode(false), "");
+        strategyDeployer.deploy(address(factory), address(strategyFactory), 0, abi.encode(false), "");
     }
 
     function test_deploy_revert_invalidStrategyManager() external {
         vm.prank(strategyDelegate);
         vm.expectRevert("MSD:D:INVALID_STRATEGY_MANAGER");
-        strategyDeployer.deploy(address(factory), address(strategyFactory), abi.encode(true), "");
+        strategyDeployer.deploy(address(factory), address(strategyFactory), 0, abi.encode(true), "");
     }
 
     function test_deploy_revert_duplicateDeployment() external {
         bytes memory strategyDeploymentData_ = abi.encode(false);
 
         vm.prank(strategyDelegate);
-        strategyDeployer.deploy(address(factory), address(strategyFactory), strategyDeploymentData_, "");
+        strategyDeployer.deploy(address(factory), address(strategyFactory), 0, strategyDeploymentData_, "");
 
         vm.prank(strategyDelegate);
         vm.expectRevert();
-        strategyDeployer.deploy(address(factory), address(strategyFactory), strategyDeploymentData_, "");
+        strategyDeployer.deploy(address(factory), address(strategyFactory), 0, strategyDeploymentData_, "");
     }
 
     function test_deploy_revert_bootstrapTransferFailed() external {
@@ -97,7 +97,7 @@ contract DeployFailureTests is TestBase {
 
         vm.prank(strategyDelegate);
         vm.expectRevert("MSD:D:BOOTSTRAP_TRANSFER_FAILED");
-        strategyDeployer.deploy(address(factory), address(strategyFactory), abi.encode(false), "");
+        strategyDeployer.deploy(address(factory), address(strategyFactory), 0, abi.encode(false), "");
     }
 
 }
@@ -126,7 +126,8 @@ contract DeploySuccessTests is TestBase {
     }
 
     function test_deploy_success() external {
-        uint256 bootstrapAssets = 1e6;
+        uint256 bootstrapAssets      = 1e6;
+        uint256 strategyLiquidityCap = 1_000_000e18;
 
         bytes memory strategyDeploymentData_ = abi.encode(false);
         bytes memory bootstrapFundingData_   = abi.encode("bootstrap-funding-data");
@@ -158,8 +159,13 @@ contract DeploySuccessTests is TestBase {
         );
 
         vm.prank(strategyDelegate);
-        ( address strategyManager, address underlyingStrategy ) =
-            strategyDeployer.deploy(address(factory), address(strategyFactory), strategyDeploymentData_, bootstrapFundingData_);
+        ( address strategyManager, address underlyingStrategy ) = strategyDeployer.deploy(
+            address(factory),
+            address(strategyFactory),
+            strategyLiquidityCap,
+            strategyDeploymentData_,
+            bootstrapFundingData_
+        );
 
         assertEq(strategyManager,    expectedStrategyManager);
         assertEq(underlyingStrategy, expectedUnderlyingStrategy);
@@ -167,9 +173,10 @@ contract DeploySuccessTests is TestBase {
         assertEq(factory.isInstance(strategyManager),            true);
         assertEq(strategyFactory.isInstance(underlyingStrategy), true);
 
-        assertEq(IMapleStrategyManager(strategyManager).strategyDelegate(),   strategyDelegate);
-        assertEq(IMapleStrategyManager(strategyManager).underlyingStrategy(), underlyingStrategy);
-        assertEq(IMapleStrategyManager(strategyManager).configured(),         true);
+        assertEq(IMapleStrategyManager(strategyManager).strategyDelegate(),     strategyDelegate);
+        assertEq(IMapleStrategyManager(strategyManager).underlyingStrategy(),   underlyingStrategy);
+        assertEq(IMapleStrategyManager(strategyManager).strategyLiquidityCap(), strategyLiquidityCap);
+        assertEq(IMapleStrategyManager(strategyManager).configured(),           true);
 
         assertEq(IMapleStrategyManager(strategyManager).totalShares(),        bootstrapAssets);
         assertEq(IMapleStrategyManager(strategyManager).sharesOf(address(0)), bootstrapAssets);
@@ -199,7 +206,7 @@ contract DeploySuccessTests is TestBase {
 
         vm.prank(strategyDelegate);
         ( address strategyManager, address underlyingStrategy ) =
-            strategyDeployer.deploy(address(factory), address(strategyFactory), strategyDeploymentData_, "");
+            strategyDeployer.deploy(address(factory), address(strategyFactory), 0, strategyDeploymentData_, "");
 
         assertEq(strategyManager,    expectedStrategyManager);
         assertEq(underlyingStrategy, expectedUnderlyingStrategy);
@@ -207,9 +214,48 @@ contract DeploySuccessTests is TestBase {
         assertEq(factory.isInstance(strategyManager),            true);
         assertEq(strategyFactory.isInstance(underlyingStrategy), true);
 
-        assertEq(IMapleStrategyManager(strategyManager).strategyDelegate(),   strategyDelegate);
-        assertEq(IMapleStrategyManager(strategyManager).underlyingStrategy(), underlyingStrategy);
-        assertEq(IMapleStrategyManager(strategyManager).configured(),         true);
+        assertEq(IMapleStrategyManager(strategyManager).strategyDelegate(),     strategyDelegate);
+        assertEq(IMapleStrategyManager(strategyManager).underlyingStrategy(),   underlyingStrategy);
+        assertEq(IMapleStrategyManager(strategyManager).strategyLiquidityCap(), 0);
+        assertEq(IMapleStrategyManager(strategyManager).configured(),           true);
+
+        assertEq(IMapleStrategyManager(strategyManager).totalShares(),        0);
+        assertEq(IMapleStrategyManager(strategyManager).sharesOf(address(0)), 0);
+
+        assertEq(MockDeployableStrategy(underlyingStrategy).strategyManager(), strategyManager);
+    }
+
+    function test_deploy_success_zeroLiquidityCap_leftUnset() external {
+        bytes memory strategyDeploymentData_ = abi.encode(false);
+
+        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) = strategyDeployer.getDeploymentAddresses(
+            strategyDelegate,
+            address(factory),
+            address(strategyFactory),
+            strategyDeploymentData_
+        );
+
+        // A zero cap is left unset, so setStrategyLiquidityCap is never called during deployment.
+        vm.expectCall(
+            expectedStrategyManager,
+            abi.encodeCall(IMapleStrategyManager.setStrategyLiquidityCap, (0)),
+            0
+        );
+
+        vm.prank(strategyDelegate);
+        ( address strategyManager, address underlyingStrategy ) =
+            strategyDeployer.deploy(address(factory), address(strategyFactory), 0, strategyDeploymentData_, "");
+
+        assertEq(strategyManager,    expectedStrategyManager);
+        assertEq(underlyingStrategy, expectedUnderlyingStrategy);
+
+        assertEq(factory.isInstance(strategyManager),            true);
+        assertEq(strategyFactory.isInstance(underlyingStrategy), true);
+
+        assertEq(IMapleStrategyManager(strategyManager).strategyDelegate(),     strategyDelegate);
+        assertEq(IMapleStrategyManager(strategyManager).underlyingStrategy(),   underlyingStrategy);
+        assertEq(IMapleStrategyManager(strategyManager).strategyLiquidityCap(), 0);
+        assertEq(IMapleStrategyManager(strategyManager).configured(),           true);
 
         assertEq(IMapleStrategyManager(strategyManager).totalShares(),        0);
         assertEq(IMapleStrategyManager(strategyManager).sharesOf(address(0)), 0);

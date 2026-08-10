@@ -16,13 +16,19 @@ contract SetPendingStrategyDelegateFailureTests is TestBase {
     function test_setPendingStrategyDelegate_revert_functionPaused() external {
         MockGlobals(globals).__setIsFunctionPaused(MapleStrategyManager.setPendingStrategyDelegate.selector, true);
 
-        vm.prank(strategyDelegate);
+        vm.prank(operationalAdmin);
         vm.expectRevert("MSM:PAUSED");
         strategyManager.setPendingStrategyDelegate(newStrategyDelegate);
     }
 
     function test_setPendingStrategyDelegate_revert_notAuthorized() external {
-        vm.expectRevert("MSM:NOT_ADMIN");
+        vm.expectRevert("MSM:SPSD:NOT_OPERATIONAL_ADMIN");
+        strategyManager.setPendingStrategyDelegate(newStrategyDelegate);
+    }
+
+    function test_setPendingStrategyDelegate_revert_calledByStrategyDelegate() external {
+        vm.prank(strategyDelegate);
+        vm.expectRevert("MSM:SPSD:NOT_OPERATIONAL_ADMIN");
         strategyManager.setPendingStrategyDelegate(newStrategyDelegate);
     }
 
@@ -47,22 +53,8 @@ contract SetPendingStrategyDelegateSuccessTests is TestBase {
         assertEq(strategyManager.pendingStrategyDelegate(), newStrategyDelegate);
     }
 
-    function test_setPendingStrategyDelegate_success_calledByStrategyDelegate() external {
-        assertEq(strategyManager.strategyDelegate(),        strategyDelegate);
-        assertEq(strategyManager.pendingStrategyDelegate(), address(0));
-
-        vm.expectEmit(address(strategyManager));
-        emit IMapleStrategyManager.PendingStrategyDelegateSet(newStrategyDelegate);
-
-        vm.prank(strategyDelegate);
-        strategyManager.setPendingStrategyDelegate(newStrategyDelegate);
-
-        assertEq(strategyManager.strategyDelegate(),        strategyDelegate);
-        assertEq(strategyManager.pendingStrategyDelegate(), newStrategyDelegate);
-    }
-
     function test_setPendingStrategyDelegate_success_cancelWithZeroAddress() external {
-        vm.prank(strategyDelegate);
+        vm.prank(operationalAdmin);
         strategyManager.setPendingStrategyDelegate(newStrategyDelegate);
 
         assertEq(strategyManager.strategyDelegate(),        strategyDelegate);
@@ -71,7 +63,7 @@ contract SetPendingStrategyDelegateSuccessTests is TestBase {
         vm.expectEmit(address(strategyManager));
         emit IMapleStrategyManager.PendingStrategyDelegateSet(address(0));
 
-        vm.prank(strategyDelegate);
+        vm.prank(operationalAdmin);
         strategyManager.setPendingStrategyDelegate(address(0));
 
         assertEq(strategyManager.strategyDelegate(),        strategyDelegate);
@@ -85,7 +77,7 @@ contract SetPendingStrategyDelegateSuccessTests is TestBase {
         vm.expectEmit(address(strategyManager));
         emit IMapleStrategyManager.PendingStrategyDelegateSet(strategyDelegate);
 
-        vm.prank(strategyDelegate);
+        vm.prank(operationalAdmin);
         strategyManager.setPendingStrategyDelegate(strategyDelegate);
 
         assertEq(strategyManager.strategyDelegate(),        strategyDelegate);
@@ -93,7 +85,7 @@ contract SetPendingStrategyDelegateSuccessTests is TestBase {
     }
 
     function test_setPendingStrategyDelegate_success_overwrite() external {
-        vm.prank(strategyDelegate);
+        vm.prank(operationalAdmin);
         strategyManager.setPendingStrategyDelegate(newStrategyDelegate);
 
         assertEq(strategyManager.strategyDelegate(),        strategyDelegate);
@@ -102,7 +94,7 @@ contract SetPendingStrategyDelegateSuccessTests is TestBase {
         vm.expectEmit(address(strategyManager));
         emit IMapleStrategyManager.PendingStrategyDelegateSet(nextStrategyDelegate);
 
-        vm.prank(strategyDelegate);
+        vm.prank(operationalAdmin);
         strategyManager.setPendingStrategyDelegate(nextStrategyDelegate);
 
         assertEq(strategyManager.strategyDelegate(),        strategyDelegate);

@@ -26,7 +26,7 @@ contract AcceptStrategyDelegateFailureTests is TestBase {
     }
 
     function test_acceptStrategyDelegate_revert_notPendingStrategyDelegate() external {
-        vm.prank(strategyDelegate);
+        vm.prank(operationalAdmin);
         strategyManager.setPendingStrategyDelegate(newStrategyDelegate);
 
         vm.expectRevert("MSM:ASD:NOT_PENDING_SD");
@@ -34,7 +34,7 @@ contract AcceptStrategyDelegateFailureTests is TestBase {
     }
 
     function test_acceptStrategyDelegate_revert_globalsTransferFails() external {
-        vm.prank(strategyDelegate);
+        vm.prank(operationalAdmin);
         strategyManager.setPendingStrategyDelegate(newStrategyDelegate);
 
         MockGlobals(globals).__setFailTransferOwnedStrategyManager(true);
@@ -56,7 +56,7 @@ contract AcceptStrategyDelegateSuccessTests is TestBase {
     address nextStrategyDelegate = makeAddr("nextStrategyDelegate");
 
     function test_acceptStrategyDelegate_success() external {
-        vm.prank(strategyDelegate);
+        vm.prank(operationalAdmin);
         strategyManager.setPendingStrategyDelegate(newStrategyDelegate);
 
         assertEq(strategyManager.strategyDelegate(),                                strategyDelegate);
@@ -75,7 +75,7 @@ contract AcceptStrategyDelegateSuccessTests is TestBase {
     }
 
     function test_acceptStrategyDelegate_success_canSetPendingStrategyDelegateAfterAccept() external {
-        vm.prank(strategyDelegate);
+        vm.prank(operationalAdmin);
         strategyManager.setPendingStrategyDelegate(newStrategyDelegate);
 
         vm.prank(newStrategyDelegate);
@@ -88,7 +88,7 @@ contract AcceptStrategyDelegateSuccessTests is TestBase {
         vm.expectEmit(address(strategyManager));
         emit IMapleStrategyManager.PendingStrategyDelegateSet(nextStrategyDelegate);
 
-        vm.prank(newStrategyDelegate);
+        vm.prank(operationalAdmin);
         strategyManager.setPendingStrategyDelegate(nextStrategyDelegate);
 
         assertEq(strategyManager.strategyDelegate(),                                newStrategyDelegate);

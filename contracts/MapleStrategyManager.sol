@@ -157,9 +157,9 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         emit PendingStrategyDelegateAccepted(strategyDelegate_, pendingStrategyDelegate_);
     }
 
-    function setPendingStrategyDelegate(address pendingStrategyDelegate_)
-        external override whenNotPaused onlyAdminsOrNotConfigured
-    {
+    function setPendingStrategyDelegate(address pendingStrategyDelegate_) external override whenNotPaused {
+        require(msg.sender == IGlobalsLike(globals()).operationalAdmin(), "MSM:SPSD:NOT_OPERATIONAL_ADMIN");
+
         pendingStrategyDelegate = pendingStrategyDelegate_;
 
         emit PendingStrategyDelegateSet(pendingStrategyDelegate_);

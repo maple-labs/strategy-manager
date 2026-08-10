@@ -149,7 +149,7 @@ contract MulticallSuccessTests is TestBase {
         calls.push(abi.encodeCall(MapleStrategyManager.setPoolManagerCap,          (poolManager, 1_000)));
         calls.push(abi.encodeCall(MapleStrategyManager.setPendingStrategyDelegate, (newStrategyDelegate)));
 
-        vm.prank(strategyDelegate);
+        vm.prank(operationalAdmin);
         strategyManager.multicall(calls);
 
         assertEq(strategyManager.poolManagerCapOf(poolManager), 1_000);
@@ -174,7 +174,6 @@ contract MulticallSuccessTests is TestBase {
         uint256 bootstrapDepositedAssets = bootstrapAssets / 3;
 
         address unpermissionedCaller = makeAddr("randomer");
-        address newStrategyDelegate  = makeAddr("newStrategyDelegate");
 
         address newUnderlyingStrategy = address(new MockStrategy());
 
@@ -186,16 +185,14 @@ contract MulticallSuccessTests is TestBase {
 
         strategyManager.__setConfigured(false);
 
-        calls.push(abi.encodeCall(MapleStrategyManager.setUnderlyingStrategy,      (newUnderlyingStrategy)));
-        calls.push(abi.encodeCall(MapleStrategyManager.setPoolManagerCap,          (poolManager, poolManagerCap)));
-        calls.push(abi.encodeCall(MapleStrategyManager.setStrategyLiquidityCap,    (strategyLiquidityCap)));
-        calls.push(abi.encodeCall(MapleStrategyManager.setPendingStrategyDelegate, (newStrategyDelegate)));
-        calls.push(abi.encodeCall(MapleStrategyManager.completeConfiguration,      (bootstrapAssets, "")));
+        calls.push(abi.encodeCall(MapleStrategyManager.setUnderlyingStrategy,   (newUnderlyingStrategy)));
+        calls.push(abi.encodeCall(MapleStrategyManager.setPoolManagerCap,       (poolManager, poolManagerCap)));
+        calls.push(abi.encodeCall(MapleStrategyManager.setStrategyLiquidityCap, (strategyLiquidityCap)));
+        calls.push(abi.encodeCall(MapleStrategyManager.completeConfiguration,   (bootstrapAssets, "")));
 
         assertEq(strategyManager.underlyingStrategy(),          underlyingStrategy);
         assertEq(strategyManager.poolManagerCapOf(poolManager), 0);
         assertEq(strategyManager.strategyLiquidityCap(),        0);
-        assertEq(strategyManager.pendingStrategyDelegate(),     address(0));
         assertEq(strategyManager.configured(),                  false);
 
         assertEq(strategyManager.assetsUnderManagement(), 0);
@@ -208,7 +205,6 @@ contract MulticallSuccessTests is TestBase {
         assertEq(strategyManager.underlyingStrategy(),          newUnderlyingStrategy);
         assertEq(strategyManager.poolManagerCapOf(poolManager), poolManagerCap);
         assertEq(strategyManager.strategyLiquidityCap(),        strategyLiquidityCap);
-        assertEq(strategyManager.pendingStrategyDelegate(),     newStrategyDelegate);
         assertEq(strategyManager.configured(),                  true);
 
         assertEq(strategyManager.assetsUnderManagement(), bootstrapDepositedAssets);

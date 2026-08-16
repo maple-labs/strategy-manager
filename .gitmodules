@@ -4,3 +4,6 @@
 [submodule "modules/maple-proxy-factory"]
 	path = modules/maple-proxy-factory
 	url = git@github.com:maple-labs/maple-proxy-factory.git
+[submodule "modules/erc20-helper"]
+	path = modules/erc20-helper
+	url = git@github.com:maple-labs/erc20-helper.git

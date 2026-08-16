@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import { ERC20Helper } from "../modules/erc20-helper/src/ERC20Helper.sol";
+
 import { IMapleProxyFactory } from "../modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
 
 import { IMapleStrategyDeployer } from "./interfaces/IMapleStrategyDeployer.sol";
 import { IMapleStrategyManager }  from "./interfaces/IMapleStrategyManager.sol";
 
 import {
-    IERC20Like,
     IGlobalsLike,
     IStrategyLike,
     IUnderlyingStrategyLike
@@ -67,7 +68,7 @@ contract MapleStrategyDeployer is IMapleStrategyDeployer {
 
         if (bootstrapAssets_ != 0) {
             require(
-                IERC20Like(fundsAsset_).transferFrom(strategyDelegate_, underlyingStrategy_, bootstrapAssets_),
+                ERC20Helper.transferFrom(fundsAsset_, strategyDelegate_, underlyingStrategy_, bootstrapAssets_),
                 "MSD:D:BOOTSTRAP_TRANSFER_FAILED"
             );
         }

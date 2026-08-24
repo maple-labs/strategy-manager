@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.28;
+pragma solidity 0.8.34;
 
 import { IMapleStrategyManagerInitializer } from "./interfaces/IMapleStrategyManagerInitializer.sol";
 import { IGlobalsLike, IProxyFactoryLike }  from "./interfaces/Interfaces.sol";

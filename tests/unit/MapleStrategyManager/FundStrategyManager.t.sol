@@ -798,7 +798,6 @@ contract FundStrategyManagerSuccessTests is TestBase {
         assertEq(strategyManager.assetsOf(poolManager), assetsDeployed);
     }
 
-    // TODO: Should this revert
     function test_fundStrategyManager_success_secondFunding_strategyHasLoss_depositorRoundsToZero() external {
         uint256 totalSharesBeforeFund           = 10;
         uint256 assetsUnderManagementBeforeFund = 3;

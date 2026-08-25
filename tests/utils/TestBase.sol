@@ -92,7 +92,6 @@ contract TestBase is Test {
 
     function setStrategyManagerState(uint256 aum_, uint256 totalShares_) internal {
         MockStrategy(underlyingStrategy).__setAssetsUnderManagement(aum_);
-        // TODO: Consider adding availableToWithdraw_ as a separate parameter if tests need to model partial liquidity.
         MockStrategy(underlyingStrategy).__setAvailableToWithdraw(aum_);
         strategyManager.__setTotalShares(totalShares_);
     }

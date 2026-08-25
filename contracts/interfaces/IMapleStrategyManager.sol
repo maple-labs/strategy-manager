@@ -112,6 +112,12 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
      */
     function setUnderlyingStrategy(address underlyingStrategy) external;
 
+    /**
+     *  @dev   Sets the strategy manager to be active or inactive.
+     *  @param active Whether the strategy manager is active.
+     */
+    function setActive(bool active) external;
+
     /**************************************************************************************************************************************/
     /*** Ownership Transfer Functions                                                                                                   ***/
     /**************************************************************************************************************************************/
@@ -132,13 +138,6 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     /**************************************************************************************************************************************/
 
     /**
-     *  @dev   Cancels a previously queued redemption, reducing the pool manager's pending shares.
-     *  @param poolManager Address of the pool manager whose redemption is being cancelled.
-     *  @param shares      Number of pending shares to cancel.
-     */
-    function cancelRedemption(address poolManager, uint256 shares) external;
-
-    /**
      *  @dev   Pulls assets from a pool manager into the underlying strategy and credits the pool manager with shares.
      *         If a non-zero cap is set for the pool manager (see `setPoolManagerCap`), the resulting asset position
      *         must not exceed it. A cap of zero is treated as unset and imposes no limit. A cap of `type(uint256).max`
@@ -150,6 +149,21 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
     function fundStrategyManager(address poolManager, uint256 assetsIn, bytes calldata data) external;
 
     /**
+     *  @dev   Requests a redemption of shares for a pool manager. Does not reduce the pool manager's share balance until
+     *         the redemption is processed.
+     *  @param poolManager Address of the pool manager requesting the redemption.
+     *  @param shares      Number of shares to queue for redemption.
+     */
+    function requestRedeem(address poolManager, uint256 shares) external;
+
+    /**
+     *  @dev   Cancels a previously queued redemption, reducing the pool manager's pending shares.
+     *  @param poolManager Address of the pool manager whose redemption is being cancelled.
+     *  @param shares      Number of pending shares to cancel.
+     */
+    function cancelRedemption(address poolManager, uint256 shares) external;
+
+    /**
      *  @dev    Process a pending redemption.
      *          Withdraws from underlying strategy and sends assets directly to pool.
      *  @param  poolManager Address of the pool manager whose redemption to process.
@@ -158,29 +172,9 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
      */
     function processRedemption(address poolManager, uint256 shares, bytes calldata data) external;
 
-    /**
-     *  @dev   Requests a redemption of shares for a pool manager. Does not reduce the pool manager's share balance until
-     *         the redemption is processed.
-     *  @param poolManager Address of the pool manager requesting the redemption.
-     *  @param shares      Number of shares to queue for redemption.
-     */
-    function requestRedeem(address poolManager, uint256 shares) external;
-
     /**************************************************************************************************************************************/
     /*** Administrative Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
-
-    /**
-     *  @dev   Allows EOAs to batch admin calls.
-     *  @param data Array of calldata.
-     */
-    function multicall(bytes[] calldata data) external;
-
-    /**
-     *  @dev   Sets the strategy manager to be active or inactive.
-     *  @param active Whether the strategy manager is active.
-     */
-    function setActive(bool active) external;
 
     /**
      *  @dev   Sets the maximum asset position a pool manager can have in the strategy manager.
@@ -198,6 +192,12 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
      *  @param cap Maximum total asset position the strategy manager can have.
      */
     function setStrategyLiquidityCap(uint256 cap) external;
+
+    /**
+     *  @dev   Allows EOAs to batch admin calls.
+     *  @param data Array of calldata.
+     */
+    function multicall(bytes[] calldata data) external;
 
     /**************************************************************************************************************************************/
     /*** View Functions                                                                                                                 ***/

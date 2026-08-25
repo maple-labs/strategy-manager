@@ -14,6 +14,24 @@ import {
 
 import { MapleStrategyManagerStorage } from "./MapleStrategyManagerStorage.sol";
 
+/*
+
+    ███╗   ███╗ █████╗ ██████╗ ██╗     ███████╗
+    ████╗ ████║██╔══██╗██╔══██╗██║     ██╔════╝
+    ██╔████╔██║███████║██████╔╝██║     █████╗
+    ██║╚██╔╝██║██╔══██║██╔═══╝ ██║     ██╔══╝
+    ██║ ╚═╝ ██║██║  ██║██║     ███████╗███████╗
+    ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     ╚══════╝╚══════╝
+
+    ███████╗████████╗██████╗  █████╗ ████████╗███████╗ ██████╗██╗   ██╗    ███╗   ███╗ █████╗ ███╗   ██╗ █████╗  ██████╗ ███████╗██████╗
+    ██╔════╝╚══██╔══╝██╔══██╗██╔══██╗╚══██╔══╝██╔════╝██╔════╝╚██╗ ██╔╝    ████╗ ████║██╔══██╗████╗  ██║██╔══██╗██╔════╝ ██╔════╝██╔══██╗
+    ███████╗   ██║   ██████╔╝███████║   ██║   █████╗  ██║  ███╗╚████╔╝     ██╔████╔██║███████║██╔██╗ ██║███████║██║  ███╗█████╗  ██████╔╝
+    ╚════██║   ██║   ██╔══██╗██╔══██║   ██║   ██╔══╝  ██║   ██║ ╚██╔╝      ██║╚██╔╝██║██╔══██║██║╚██╗██║██╔══██║██║   ██║██╔══╝  ██╔══██╗
+    ███████║   ██║   ██║  ██║██║  ██║   ██║   ███████╗╚██████╔╝  ██║       ██║ ╚═╝ ██║██║  ██║██║ ╚████║██║  ██║╚██████╔╝███████╗██║  ██║
+    ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚═════╝   ╚═╝       ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝
+
+*/
+
 contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStorage, MapleProxiedInternals {
 
     /**************************************************************************************************************************************/
@@ -95,7 +113,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /*** Initial Configuration Functions                                                                                                ***/
     /**************************************************************************************************************************************/
 
-    // NOTE: This function is always called atomically during the deployment process so a DoS attack is not possible.
+    // NOTE: This function is always called atomically during the deployment process, so a DoS attack is not possible.
     function completeConfiguration(uint256 bootstrapAssets_, bytes calldata bootstrapFundingData_)
         external override whenNotPaused nonReentrant
     {
@@ -118,7 +136,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         emit StrategyManagerConfigurationComplete();
     }
 
-    // NOTE: This function is always called atomically during the deployment process so a DoS attack is not possible.
+    // NOTE: This function is always called atomically during the deployment process, so a DoS attack is not possible.
     function setUnderlyingStrategy(address underlyingStrategy_) external override whenNotPaused {
         require(!configured, "MSM:SUS:ALREADY_CONFIGURED");
 
@@ -126,10 +144,6 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
 
         emit UnderlyingStrategySet(underlyingStrategy_);
     }
-
-    /**************************************************************************************************************************************/
-    /*** Globals Admin Functions                                                                                                        ***/
-    /**************************************************************************************************************************************/
 
     function setActive(bool active_) external override whenNotPaused {
         require(msg.sender == globals(), "MSM:SA:NOT_GLOBALS");
@@ -169,22 +183,6 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /*** Liquidity Management Functions                                                                                                ***/
     /**************************************************************************************************************************************/
 
-    function cancelRedemption(
-        address poolManager_,
-        uint256 shares_
-    )
-        external override whenNotPaused nonReentrant onlyOperatorOrPoolDelegate(poolManager_)
-    {
-        require(_isValidPoolManager(poolManager_),        "MSM:CR:INVALID_PM");
-        require(shares_ != 0,                             "MSM:CR:ZERO_SHARES");
-        require(shares_ <= pendingSharesOf[poolManager_], "MSM:CR:INSUFFICIENT_SHARES");
-
-        pendingSharesOf[poolManager_] -= shares_;
-        totalPendingShares            -= shares_;
-
-        emit RedemptionCancelled(poolManager_, shares_);
-    }
-
     function fundStrategyManager(address poolManager_, uint256 assetsIn_, bytes calldata data_)
         external override whenNotPaused nonReentrant onlyOperator
     {
@@ -209,6 +207,41 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         require(assetsUnderManagement() <= strategyLiquidityCap, "MSM:FSM:STRATEGY_LIQUIDITY_CAP");
 
         emit StrategyManagerFunded(poolManager_, assetsIn_, assetsDeposited_, sharesMinted_);
+    }
+
+    function requestRedeem(
+        address poolManager_,
+        uint256 shares_
+    )
+        external override whenNotPaused nonReentrant onlyOperatorOrPoolDelegate(poolManager_)
+    {
+        require(_isValidPoolManager(poolManager_), "MSM:RR:INVALID_PM");
+
+        uint256 remainingShares_ = sharesOf[poolManager_] - pendingSharesOf[poolManager_];
+
+        require(shares_ != 0,                "MSM:RR:ZERO_SHARES");
+        require(shares_ <= remainingShares_, "MSM:RR:INSUFFICIENT_SHARES");
+
+        pendingSharesOf[poolManager_] += shares_;
+        totalPendingShares            += shares_;
+
+        emit RedemptionRequested(poolManager_, shares_);
+    }
+
+    function cancelRedemption(
+        address poolManager_,
+        uint256 shares_
+    )
+        external override whenNotPaused nonReentrant onlyOperatorOrPoolDelegate(poolManager_)
+    {
+        require(_isValidPoolManager(poolManager_),        "MSM:CR:INVALID_PM");
+        require(shares_ != 0,                             "MSM:CR:ZERO_SHARES");
+        require(shares_ <= pendingSharesOf[poolManager_], "MSM:CR:INSUFFICIENT_SHARES");
+
+        pendingSharesOf[poolManager_] -= shares_;
+        totalPendingShares            -= shares_;
+
+        emit RedemptionCancelled(poolManager_, shares_);
     }
 
     function processRedemption(
@@ -242,40 +275,9 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         emit RedemptionProcessed(poolManager_, shares_, assets_);
     }
 
-    function requestRedeem(
-        address poolManager_,
-        uint256 shares_
-    )
-        external override whenNotPaused nonReentrant onlyOperatorOrPoolDelegate(poolManager_)
-    {
-        require(_isValidPoolManager(poolManager_), "MSM:RR:INVALID_PM");
-
-        uint256 remainingShares_ = sharesOf[poolManager_] - pendingSharesOf[poolManager_];
-
-        require(shares_ != 0,                "MSM:RR:ZERO_SHARES");
-        require(shares_ <= remainingShares_, "MSM:RR:INSUFFICIENT_SHARES");
-
-        pendingSharesOf[poolManager_] += shares_;
-        totalPendingShares            += shares_;
-
-        emit RedemptionRequested(poolManager_, shares_);
-    }
-
     /**************************************************************************************************************************************/
     /*** Administrative Functions                                                                                                       ***/
     /**************************************************************************************************************************************/
-
-    function multicall(bytes[] calldata data_) external override {
-        for (uint256 i = 0; i < data_.length; i++) {
-            ( bool success_, bytes memory returnData_ ) = address(this).delegatecall(data_[i]);
-
-            if (!success_) {
-                assembly ("memory-safe") {
-                    revert(add(32, returnData_), mload(returnData_))
-                }
-            }
-        }
-    }
 
     function setPoolManagerCap(address poolManager_, uint256 cap_) external override whenNotPaused onlyAdminsOrNotConfigured {
         require(poolManagerCapOf[poolManager_] != cap_,         "MSM:SPMC:NO_CHANGE");
@@ -292,6 +294,18 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         strategyLiquidityCap = cap_;
 
         emit StrategyLiquidityCapSet(cap_);
+    }
+
+    function multicall(bytes[] calldata data_) external override {
+        for (uint256 i = 0; i < data_.length; i++) {
+            ( bool success_, bytes memory returnData_ ) = address(this).delegatecall(data_[i]);
+
+            if (!success_) {
+                assembly ("memory-safe") {
+                    revert(add(32, returnData_), mload(returnData_))
+                }
+            }
+        }
     }
 
     /**************************************************************************************************************************************/

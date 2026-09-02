@@ -54,9 +54,13 @@ contract TestBase is Test {
 
         MockGlobals(globals).__setCanDeploy(deployer, true);
         MockGlobals(globals).__setGovernor(governor);
-        MockGlobals(globals).__setIsInstanceOf("LIQUIDITY_BOT",        liquidityBot,       true);
-        MockGlobals(globals).__setIsInstanceOf("LIQUIDITY_ROUTER",     liquidityRouter,    true);
-        MockGlobals(globals).__setIsInstanceOf("POOL_MANAGER_FACTORY", poolManagerFactory, true);
+
+        strategyFactory = new MockStrategyFactory(globals);
+
+        MockGlobals(globals).__setIsInstanceOf("LIQUIDITY_BOT",               liquidityBot,             true);
+        MockGlobals(globals).__setIsInstanceOf("LIQUIDITY_ROUTER",            liquidityRouter,          true);
+        MockGlobals(globals).__setIsInstanceOf("POOL_MANAGER_FACTORY",        poolManagerFactory,       true);
+        MockGlobals(globals).__setIsInstanceOf("UNDERLYING_STRATEGY_FACTORY", address(strategyFactory), true);
         MockGlobals(globals).__setOperationalAdmin(operationalAdmin);
         MockGlobals(globals).__setSecurityAdmin(securityAdmin);
 
@@ -65,7 +69,9 @@ contract TestBase is Test {
         MockPoolManager(poolManager).__setPoolDelegate(poolDelegate);
         MockPoolManagerFactory(poolManagerFactory).__setIsInstance(poolManager, true);
 
+        MockStrategy(underlyingStrategy).__setFactory(address(strategyFactory));
         MockStrategy(underlyingStrategy).__setFundsAsset(address(asset));
+        strategyFactory.__setIsInstance(underlyingStrategy, true);
 
         factory = new MapleStrategyManagerFactory(globals);
 

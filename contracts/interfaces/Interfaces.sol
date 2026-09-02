@@ -77,6 +77,8 @@ interface IUnderlyingStrategyLike {
 
     function assetsUnderManagement() external view returns (uint256 assetsUnderManagement);
 
+    function factory() external view returns (address factory);
+
     function fundsAsset() external view returns (address fundsAsset);
 
     function fundUnderlyingStrategy(uint256 assets, bytes calldata data) external returns (uint256 amount);

@@ -186,11 +186,14 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     function fundStrategyManager(address poolManager_, uint256 assetsIn_, bytes calldata data_)
         external override whenNotPaused nonReentrant onlyOperator
     {
-        require(active,                            "MSM:FSM:NOT_ACTIVE");
-        require(assetsIn_ != 0,                    "MSM:FSM:ZERO_ASSETS");
-        require(_isValidPoolManager(poolManager_), "MSM:FSM:INVALID_PM");
+        require(active,         "MSM:FSM:NOT_ACTIVE");
+        require(assetsIn_ != 0, "MSM:FSM:ZERO_ASSETS");
 
         address underlyingStrategy_ = underlyingStrategy;
+
+        require(_isValidPoolManager(poolManager_),               "MSM:FSM:INVALID_PM");
+        require(_isValidUnderlyingStrategy(underlyingStrategy_), "MSM:FSM:INVALID_US");
+
         uint256 totalAssetsBefore_  = assetsUnderManagement();
 
         IPoolManagerLike(poolManager_).requestFunds(underlyingStrategy_, assetsIn_);
@@ -423,6 +426,14 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         isValid_ =
             IGlobalsLike(globals()).isInstanceOf("POOL_MANAGER_FACTORY", factory_) &&
             IProxyFactoryLike(factory_).isInstance(poolManager_);
+    }
+
+    function _isValidUnderlyingStrategy(address underlyingStrategy_) internal view returns (bool isValid_) {
+        address factory_ = IUnderlyingStrategyLike(underlyingStrategy_).factory();
+
+        isValid_ =
+            IGlobalsLike(globals()).isInstanceOf("UNDERLYING_STRATEGY_FACTORY", factory_) &&
+            IProxyFactoryLike(factory_).isInstance(underlyingStrategy_);
     }
 
     function _isWithinPoolManagerCap(address poolManager_) internal view returns (bool withinCap_) {

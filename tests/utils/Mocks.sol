@@ -216,6 +216,10 @@ contract MockStrategyFactory is MapleProxyFactory {
         invalidInstance = invalidInstance_;
     }
 
+    function __setIsInstance(address instance_, bool isInstance_) external {
+        isInstance[instance_] = isInstance_;
+    }
+
     function createInstance(bytes calldata arguments_, bytes32 salt_) public override returns (address instance_) {
         require(IGlobalsLike(mapleGlobals).canDeploy(msg.sender), "MSF:CI:CANNOT_DEPLOY");
 
@@ -324,6 +328,7 @@ contract MockDeployableStrategyInitializer {
 
 contract MockStrategy {
 
+    address public factory;
     address public fundsAsset;
 
     uint256 public assetsUnderManagement;
@@ -332,6 +337,10 @@ contract MockStrategy {
     uint256 public unrealizedLosses;
 
     uint256 internal _fundReturn;
+
+    function __setFactory(address factory_) external {
+        factory = factory_;
+    }
 
     function __setFundsAsset(address fundsAsset_) external {
         fundsAsset = fundsAsset_;

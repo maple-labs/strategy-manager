@@ -11,7 +11,8 @@ import {
     MockGlobals,
     MockPoolManager,
     MockPoolManagerFactory,
-    MockStrategy
+    MockStrategy,
+    MockStrategyFactory
 } from "../../utils/Mocks.sol";
 
 import { TestBase } from "../../utils/TestBase.sol";
@@ -89,6 +90,31 @@ contract FundStrategyManagerFailureTests is TestBase {
         vm.prank(liquidityBot);
         vm.expectRevert("MSM:FSM:INVALID_PM");
         strategyManager.fundStrategyManager(otherPoolManager, 1, "");
+    }
+
+    function test_fundStrategyManager_revert_invalidUSFactory() external {
+        address otherFactory            = address(new MockStrategyFactory(globals));
+        address otherUnderlyingStrategy = address(new MockStrategy());
+
+        MockStrategy(otherUnderlyingStrategy).__setFactory(otherFactory);
+
+        strategyManager.__setUnderlyingStrategy(otherUnderlyingStrategy);
+
+        vm.prank(liquidityBot);
+        vm.expectRevert("MSM:FSM:INVALID_US");
+        strategyManager.fundStrategyManager(poolManager, 1, "");
+    }
+
+    function test_fundStrategyManager_revert_invalidUS() external {
+        address otherUnderlyingStrategy = address(new MockStrategy());
+
+        MockStrategy(otherUnderlyingStrategy).__setFactory(address(strategyFactory));
+
+        strategyManager.__setUnderlyingStrategy(otherUnderlyingStrategy);
+
+        vm.prank(liquidityBot);
+        vm.expectRevert("MSM:FSM:INVALID_US");
+        strategyManager.fundStrategyManager(poolManager, 1, "");
     }
 
     function test_fundStrategyManager_revert_zeroTotalAssetsWithNonZeroShares() external {

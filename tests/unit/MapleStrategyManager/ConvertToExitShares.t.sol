@@ -8,7 +8,7 @@ import { TestBase }     from "../../utils/TestBase.sol";
 
 contract ConvertToExitSharesTests is TestBase {
 
-    function test_convertToExitShares_revert_zeroAssetsZeroTotalExitAssets() external {
+    function test_convertToExitShares_revert_underflow_zeroAssetsZeroTotalExitAssets() external {
         setStrategyManagerState({
             aum_:         100,
             totalShares_: 10
@@ -16,7 +16,7 @@ contract ConvertToExitSharesTests is TestBase {
 
         MockStrategy(underlyingStrategy).__setUnrealizedLosses(100);
 
-        vm.expectRevert(stdError.divisionError);
+        vm.expectRevert(stdError.arithmeticError);
         strategyManager.convertToExitShares(0);
     }
 
@@ -79,7 +79,7 @@ contract ConvertToExitSharesTests is TestBase {
         assertEq(strategyManager.convertToExitShares(40), 5);
     }
 
-    function test_convertToExitShares_success_roundsDown() external {
+    function test_convertToExitShares_success_roundsUp() external {
         setStrategyManagerState({
             aum_:         100,
             totalShares_: 3
@@ -87,7 +87,7 @@ contract ConvertToExitSharesTests is TestBase {
 
         MockStrategy(underlyingStrategy).__setUnrealizedLosses(20);
 
-        assertEq(strategyManager.convertToExitShares(1), 0);
+        assertEq(strategyManager.convertToExitShares(1), 1);
     }
 
 }

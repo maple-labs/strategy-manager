@@ -392,7 +392,11 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     }
 
     function _convertToExitShares(uint256 assets_, uint256 totalAssets_) internal view returns (uint256 shares_) {
-        shares_ = _convertToShares(assets_, totalAssets_ - _unrealizedLosses(totalAssets_));
+        uint256 totalShares_ = totalShares;
+
+        if (totalShares_ == 0) return assets_;
+
+        shares_ = _divRoundUp(assets_ * totalShares_, totalAssets_ - _unrealizedLosses(totalAssets_));
     }
 
     function _convertToShares(uint256 assets_, uint256 totalAssets_) internal view returns (uint256 shares_) {

@@ -53,6 +53,12 @@ contract CancelRedemptionFailureTests is TestBase {
         strategyManager.cancelRedemption(poolManager, 1);
     }
 
+    function test_cancelRedemption_revert_calledByOperationalAdmin() external {
+        vm.prank(operationalAdmin);
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_PD");
+        strategyManager.cancelRedemption(poolManager, 1);
+    }
+
     function test_cancelRedemption_revert_notPoolManagerFactory() external {
         address otherFactory     = address(new MockPoolManagerFactory());
         address otherPoolManager = address(new MockPoolManager());

@@ -74,6 +74,15 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         _;
     }
 
+    modifier onlyOperatorOrOperationalAdmin() {
+        require(
+            _isOperator() || msg.sender == IGlobalsLike(globals()).operationalAdmin(),
+            "MSM:NOT_OPERATOR_OR_OA"
+        );
+
+        _;
+    }
+
     modifier onlyOperatorOrPoolDelegate(address poolManager_) {
         require(
             _isOperator() || msg.sender == IPoolManagerLike(poolManager_).poolDelegate(),
@@ -252,7 +261,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         uint256 shares_,
         bytes calldata data_
     )
-        external override whenNotPaused nonReentrant onlyOperator
+        external override whenNotPaused nonReentrant onlyOperatorOrOperationalAdmin
     {
         require(_isValidPoolManager(poolManager_),        "MSM:PR:INVALID_PM");
         require(shares_ != 0,                             "MSM:PR:ZERO_SHARES");

@@ -56,6 +56,12 @@ contract FundStrategyManagerFailureTests is TestBase {
         strategyManager.fundStrategyManager(poolManager, 1, "");
     }
 
+    function test_fundStrategyManager_revert_calledByOperationalAdmin() external {
+        vm.prank(operationalAdmin);
+        vm.expectRevert("MSM:NOT_OPERATOR");
+        strategyManager.fundStrategyManager(poolManager, 1, "");
+    }
+
     function test_fundStrategyManager_revert_notActive() external {
         strategyManager.__setActive(false);
 

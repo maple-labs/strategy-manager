@@ -53,6 +53,12 @@ contract RequestRedeemFailureTests is TestBase {
         strategyManager.requestRedeem(poolManager, 1);
     }
 
+    function test_requestRedeem_revert_calledByOperationalAdmin() external {
+        vm.prank(operationalAdmin);
+        vm.expectRevert("MSM:NOT_OPERATOR_OR_PD");
+        strategyManager.requestRedeem(poolManager, 1);
+    }
+
     function test_requestRedeem_revert_invalidPoolManagerFactory() external {
         address otherFactory     = address(new MockPoolManagerFactory());
         address otherPoolManager = address(new MockPoolManager());

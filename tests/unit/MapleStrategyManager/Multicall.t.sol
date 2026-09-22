@@ -3,12 +3,7 @@ pragma solidity ^0.8.0;
 
 import { MapleStrategyManager } from "../../../contracts/MapleStrategyManager.sol";
 
-import {
-    MockGlobals,
-    MockPoolManager,
-    MockPoolManagerFactory,
-    MockStrategy
-} from "../../utils/Mocks.sol";
+import { MockGlobals, MockPoolManager, MockPoolManagerFactory, MockStrategy } from "../../utils/Mocks.sol";
 
 import { TestBase } from "../../utils/TestBase.sol";
 
@@ -130,7 +125,7 @@ contract MulticallSuccessTests is TestBase {
         MockPoolManager(poolManager2).__setFactory(poolManagerFactory);
         MockPoolManagerFactory(poolManagerFactory).__setIsInstance(poolManager2, true);
 
-        calls.push(abi.encodeCall(MapleStrategyManager.setPoolManagerCap, (poolManager,  1_000)));
+        calls.push(abi.encodeCall(MapleStrategyManager.setPoolManagerCap, (poolManager, 1_000)));
         calls.push(abi.encodeCall(MapleStrategyManager.setPoolManagerCap, (poolManager2, 2_000)));
 
         assertEq(strategyManager.poolManagerCapOf(poolManager),  0);
@@ -146,7 +141,7 @@ contract MulticallSuccessTests is TestBase {
     function test_multicall_success_mixed() external {
         address newStrategyDelegate = makeAddr("newStrategyDelegate");
 
-        calls.push(abi.encodeCall(MapleStrategyManager.setPoolManagerCap,          (poolManager, 1_000)));
+        calls.push(abi.encodeCall(MapleStrategyManager.setPoolManagerCap, (poolManager, 1_000)));
         calls.push(abi.encodeCall(MapleStrategyManager.setPendingStrategyDelegate, (newStrategyDelegate)));
 
         vm.prank(operationalAdmin);
@@ -159,7 +154,7 @@ contract MulticallSuccessTests is TestBase {
     function test_multicall_success_sequential() external {
         strategyManager.__setSharesOf(poolManager, 1_000);
 
-        calls.push(abi.encodeCall(MapleStrategyManager.requestRedeem,    (poolManager, 500)));
+        calls.push(abi.encodeCall(MapleStrategyManager.requestRedeem, (poolManager, 500)));
         calls.push(abi.encodeCall(MapleStrategyManager.cancelRedemption, (poolManager, 499)));
 
         vm.prank(strategyDelegate);
@@ -185,10 +180,10 @@ contract MulticallSuccessTests is TestBase {
 
         strategyManager.__setConfigured(false);
 
-        calls.push(abi.encodeCall(MapleStrategyManager.setUnderlyingStrategy,   (newUnderlyingStrategy)));
-        calls.push(abi.encodeCall(MapleStrategyManager.setPoolManagerCap,       (poolManager, poolManagerCap)));
+        calls.push(abi.encodeCall(MapleStrategyManager.setUnderlyingStrategy, (newUnderlyingStrategy)));
+        calls.push(abi.encodeCall(MapleStrategyManager.setPoolManagerCap, (poolManager, poolManagerCap)));
         calls.push(abi.encodeCall(MapleStrategyManager.setStrategyLiquidityCap, (strategyLiquidityCap)));
-        calls.push(abi.encodeCall(MapleStrategyManager.completeConfiguration,   (bootstrapAssets, "")));
+        calls.push(abi.encodeCall(MapleStrategyManager.completeConfiguration, (bootstrapAssets, "")));
 
         assertEq(strategyManager.underlyingStrategy(),          underlyingStrategy);
         assertEq(strategyManager.poolManagerCapOf(poolManager), 0);

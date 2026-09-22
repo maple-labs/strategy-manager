@@ -6,13 +6,9 @@ import { ERC20Helper } from "../modules/erc20-helper/src/ERC20Helper.sol";
 import { IMapleProxyFactory } from "../modules/maple-proxy-factory/contracts/interfaces/IMapleProxyFactory.sol";
 
 import { IMapleStrategyDeployer } from "./interfaces/IMapleStrategyDeployer.sol";
-import { IMapleStrategyManager }  from "./interfaces/IMapleStrategyManager.sol";
+import { IMapleStrategyManager } from "./interfaces/IMapleStrategyManager.sol";
 
-import {
-    IGlobalsLike,
-    IStrategyLike,
-    IUnderlyingStrategyLike
-} from "./interfaces/Interfaces.sol";
+import { IGlobalsLike, IStrategyLike, IUnderlyingStrategyLike } from "./interfaces/Interfaces.sol";
 
 /*
 
@@ -34,7 +30,7 @@ import {
 
 contract MapleStrategyDeployer is IMapleStrategyDeployer {
 
-    address public override immutable globals;
+    address public immutable override globals;
 
     /**************************************************************************************************************************************/
     /*** Constructor                                                                                                                    ***/
@@ -51,35 +47,36 @@ contract MapleStrategyDeployer is IMapleStrategyDeployer {
     /**************************************************************************************************************************************/
 
     function deploy(
-        address        strategyManagerFactory_,
-        address        strategyFactory_,
-        uint256        strategyLiquidityCap_,
+        address strategyManagerFactory_,
+        address strategyFactory_,
+        uint256 strategyLiquidityCap_,
         bytes calldata strategyDeploymentData_,
         bytes calldata bootstrapFundingData_
     )
-        external override returns (address strategyManager_, address underlyingStrategy_)
+        external
+        override
+        returns (address strategyManager_, address underlyingStrategy_)
     {
         address      strategyDelegate_ = msg.sender;
         bytes32      salt_             = keccak256(abi.encode(strategyDelegate_));
         IGlobalsLike globals_          = IGlobalsLike(globals);
 
-        require(globals_.isStrategyDelegate(strategyDelegate_),                                "MSD:D:INVALID_SD");
-        require(globals_.isInstanceOf("STRATEGY_MANAGER_FACTORY",    strategyManagerFactory_), "MSD:D:INVALID_SM_FACTORY");
-        require(globals_.isInstanceOf("UNDERLYING_STRATEGY_FACTORY", strategyFactory_),        "MSD:D:INVALID_STRATEGY_FACTORY");
+        require(globals_.isStrategyDelegate(strategyDelegate_),                             "MSD:D:INVALID_SD");
+        require(globals_.isInstanceOf("STRATEGY_MANAGER_FACTORY", strategyManagerFactory_), "MSD:D:INVALID_SM_FACTORY");
+        require(globals_.isInstanceOf("UNDERLYING_STRATEGY_FACTORY", strategyFactory_),     "MSD:D:INVALID_STRATEGY_FACTORY");
 
         strategyManager_ = IMapleProxyFactory(strategyManagerFactory_).createInstance(abi.encode(strategyDelegate_), salt_);
 
         bytes memory fullStrategyDeploymentData_ = bytes.concat(abi.encode(strategyManager_), strategyDeploymentData_);
 
-        address underlyingStrategyPredicted_ =
-            IMapleProxyFactory(strategyFactory_).getInstanceAddress(fullStrategyDeploymentData_, salt_);
+        address underlyingStrategyPredicted_ = IMapleProxyFactory(strategyFactory_).getInstanceAddress(fullStrategyDeploymentData_, salt_);
 
         IMapleStrategyManager(strategyManager_).setUnderlyingStrategy(underlyingStrategyPredicted_);
 
         underlyingStrategy_ = IMapleProxyFactory(strategyFactory_).createInstance(fullStrategyDeploymentData_, salt_);
 
         require(IMapleStrategyManager(strategyManager_).underlyingStrategy() == underlyingStrategy_, "MSD:D:INVALID_STRATEGY");
-        require(IStrategyLike(underlyingStrategy_).strategyManager()         == strategyManager_,    "MSD:D:INVALID_STRATEGY_MANAGER");
+        require(IStrategyLike(underlyingStrategy_).strategyManager() == strategyManager_,            "MSD:D:INVALID_STRATEGY_MANAGER");
 
         address fundsAsset_      = IUnderlyingStrategyLike(underlyingStrategy_).fundsAsset();
         uint256 bootstrapAssets_ = globals_.bootstrapMint(fundsAsset_);
@@ -105,12 +102,15 @@ contract MapleStrategyDeployer is IMapleStrategyDeployer {
     /**************************************************************************************************************************************/
 
     function getDeploymentAddresses(
-        address        strategyDelegate_,
-        address        strategyManagerFactory_,
-        address        strategyFactory_,
+        address strategyDelegate_,
+        address strategyManagerFactory_,
+        address strategyFactory_,
         bytes calldata strategyDeploymentData_
     )
-        external view override returns (address strategyManager_, address underlyingStrategy_)
+        external
+        view
+        override
+        returns (address strategyManager_, address underlyingStrategy_)
     {
         bytes32 salt_ = keccak256(abi.encode(strategyDelegate_));
 
@@ -121,4 +121,4 @@ contract MapleStrategyDeployer is IMapleStrategyDeployer {
         underlyingStrategy_ = IMapleProxyFactory(strategyFactory_).getInstanceAddress(fullStrategyDeploymentData_, salt_);
     }
 
-}
+    }

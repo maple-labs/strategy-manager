@@ -5,19 +5,12 @@ import { Test } from "../../modules/forge-std/src/Test.sol";
 
 import { IMapleStrategyManagerInitializer } from "../../contracts/interfaces/IMapleStrategyManagerInitializer.sol";
 
-import { MapleStrategyDeployer }       from "../../contracts/MapleStrategyDeployer.sol";
+import { MapleStrategyDeployer } from "../../contracts/MapleStrategyDeployer.sol";
 import { MapleStrategyManagerFactory } from "../../contracts/MapleStrategyManagerFactory.sol";
 
 import { MapleStrategyManagerHarness, MapleStrategyManagerInitializerHarness } from "./Harnesses.sol";
 
-import {
-    MockERC20,
-    MockGlobals,
-    MockPoolManager,
-    MockPoolManagerFactory,
-    MockStrategy,
-    MockStrategyFactory
-} from "./Mocks.sol";
+import { MockERC20, MockGlobals, MockPoolManager, MockPoolManagerFactory, MockStrategy, MockStrategyFactory } from "./Mocks.sol";
 
 contract TestBase is Test {
 
@@ -44,10 +37,10 @@ contract TestBase is Test {
     address asset              = address(new MockERC20());
     address underlyingStrategy = address(new MockStrategy());
 
-    MapleStrategyDeployer       strategyDeployer;
+    MapleStrategyDeployer strategyDeployer;
     MapleStrategyManagerHarness strategyManager;
     MapleStrategyManagerFactory factory;
-    MockStrategyFactory         strategyFactory;
+    MockStrategyFactory strategyFactory;
 
     function setUp() public virtual {
         startingTime = uint32(block.timestamp);
@@ -57,9 +50,9 @@ contract TestBase is Test {
 
         strategyFactory = new MockStrategyFactory(globals);
 
-        MockGlobals(globals).__setIsInstanceOf("LIQUIDITY_BOT",               liquidityBot,             true);
-        MockGlobals(globals).__setIsInstanceOf("LIQUIDITY_ROUTER",            liquidityRouter,          true);
-        MockGlobals(globals).__setIsInstanceOf("POOL_MANAGER_FACTORY",        poolManagerFactory,       true);
+        MockGlobals(globals).__setIsInstanceOf("LIQUIDITY_BOT", liquidityBot, true);
+        MockGlobals(globals).__setIsInstanceOf("LIQUIDITY_ROUTER", liquidityRouter, true);
+        MockGlobals(globals).__setIsInstanceOf("POOL_MANAGER_FACTORY", poolManagerFactory, true);
         MockGlobals(globals).__setIsInstanceOf("UNDERLYING_STRATEGY_FACTORY", address(strategyFactory), true);
         MockGlobals(globals).__setOperationalAdmin(operationalAdmin);
         MockGlobals(globals).__setSecurityAdmin(securityAdmin);

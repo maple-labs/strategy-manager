@@ -6,7 +6,7 @@ import { IMapleProxied } from "../../../modules/maple-proxy-factory/contracts/in
 import { MapleStrategyManager } from "../../../contracts/MapleStrategyManager.sol";
 
 import { MockGlobals, MockMigrator } from "../../utils/Mocks.sol";
-import { TestBase }                  from "../../utils/TestBase.sol";
+import { TestBase } from "../../utils/TestBase.sol";
 
 contract UpgradeTests is TestBase {
 

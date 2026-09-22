@@ -5,12 +5,7 @@ import { MapleProxiedInternals } from "../modules/maple-proxy-factory/contracts/
 
 import { IMapleStrategyManager } from "./interfaces/IMapleStrategyManager.sol";
 
-import {
-    IGlobalsLike,
-    IProxyFactoryLike,
-    IPoolManagerLike,
-    IUnderlyingStrategyLike
-} from "./interfaces/Interfaces.sol";
+import { IGlobalsLike, IProxyFactoryLike, IPoolManagerLike, IUnderlyingStrategyLike } from "./interfaces/Interfaces.sol";
 
 import { MapleStrategyManagerStorage } from "./MapleStrategyManagerStorage.sol";
 
@@ -52,11 +47,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         if (configured) {
             address globals_ = globals();
 
-            require(
-                msg.sender == strategyDelegate ||
-                msg.sender == IGlobalsLike(globals_).operationalAdmin(),
-                "MSM:NOT_ADMIN"
-            );
+            require(msg.sender == strategyDelegate || msg.sender == IGlobalsLike(globals_).operationalAdmin(), "MSM:NOT_ADMIN");
         }
 
         _;
@@ -75,19 +66,13 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     }
 
     modifier onlyOperatorOrOperationalAdmin() {
-        require(
-            _isOperator() || msg.sender == IGlobalsLike(globals()).operationalAdmin(),
-            "MSM:NOT_OPERATOR_OR_OA"
-        );
+        require(_isOperator() || msg.sender == IGlobalsLike(globals()).operationalAdmin(), "MSM:NOT_OPERATOR_OR_OA");
 
         _;
     }
 
     modifier onlyOperatorOrPoolDelegate(address poolManager_) {
-        require(
-            _isOperator() || msg.sender == IPoolManagerLike(poolManager_).poolDelegate(),
-            "MSM:NOT_OPERATOR_OR_PD"
-        );
+        require(_isOperator() || msg.sender == IPoolManagerLike(poolManager_).poolDelegate(), "MSM:NOT_OPERATOR_OR_PD");
 
         _;
     }
@@ -123,8 +108,14 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /**************************************************************************************************************************************/
 
     // NOTE: This function is always called atomically during the deployment process, so a DoS attack is not possible.
-    function completeConfiguration(uint256 bootstrapAssets_, bytes calldata bootstrapFundingData_)
-        external override whenNotPaused nonReentrant
+    function completeConfiguration(
+        uint256 bootstrapAssets_,
+        bytes calldata bootstrapFundingData_
+    )
+        external
+        override
+        whenNotPaused
+        nonReentrant
     {
         require(!configured, "MSM:CC:ALREADY_CONFIGURED");
 
@@ -135,7 +126,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
             require(assetsDeposited_ != 0, "MSM:CC:ZERO_ASSETS");
 
             sharesOf[address(0)] = assetsDeposited_;
-            totalShares          = assetsDeposited_;
+            totalShares = assetsDeposited_;
 
             emit StrategyManagerFunded(address(0), bootstrapAssets_, assetsDeposited_, assetsDeposited_);
         }
@@ -192,8 +183,16 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
     /*** Liquidity Management Functions                                                                                                ***/
     /**************************************************************************************************************************************/
 
-    function fundStrategyManager(address poolManager_, uint256 assetsIn_, bytes calldata data_)
-        external override whenNotPaused nonReentrant onlyOperator
+    function fundStrategyManager(
+        address poolManager_,
+        uint256 assetsIn_,
+        bytes calldata data_
+    )
+        external
+        override
+        whenNotPaused
+        nonReentrant
+        onlyOperator
     {
         require(active,         "MSM:FSM:NOT_ACTIVE");
         require(assetsIn_ != 0, "MSM:FSM:ZERO_ASSETS");
@@ -203,7 +202,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         require(_isValidPoolManager(poolManager_),               "MSM:FSM:INVALID_PM");
         require(_isValidUnderlyingStrategy(underlyingStrategy_), "MSM:FSM:INVALID_US");
 
-        uint256 totalAssetsBefore_  = assetsUnderManagement();
+        uint256 totalAssetsBefore_ = assetsUnderManagement();
 
         IPoolManagerLike(poolManager_).requestFunds(underlyingStrategy_, assetsIn_);
 
@@ -225,7 +224,11 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         address poolManager_,
         uint256 shares_
     )
-        external override whenNotPaused nonReentrant onlyOperatorOrPoolDelegate(poolManager_)
+        external
+        override
+        whenNotPaused
+        nonReentrant
+        onlyOperatorOrPoolDelegate(poolManager_)
     {
         require(_isValidPoolManager(poolManager_), "MSM:RR:INVALID_PM");
 
@@ -244,7 +247,11 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         address poolManager_,
         uint256 shares_
     )
-        external override whenNotPaused nonReentrant onlyOperatorOrPoolDelegate(poolManager_)
+        external
+        override
+        whenNotPaused
+        nonReentrant
+        onlyOperatorOrPoolDelegate(poolManager_)
     {
         require(_isValidPoolManager(poolManager_),        "MSM:CR:INVALID_PM");
         require(shares_ != 0,                             "MSM:CR:ZERO_SHARES");
@@ -261,7 +268,11 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         uint256 shares_,
         bytes calldata data_
     )
-        external override whenNotPaused nonReentrant onlyOperatorOrOperationalAdmin
+        external
+        override
+        whenNotPaused
+        nonReentrant
+        onlyOperatorOrOperationalAdmin
     {
         require(_isValidPoolManager(poolManager_),        "MSM:PR:INVALID_PM");
         require(shares_ != 0,                             "MSM:PR:ZERO_SHARES");
@@ -278,11 +289,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         sharesOf[poolManager_] -= shares_;
         totalShares            -= shares_;
 
-        IUnderlyingStrategyLike(underlyingStrategy).withdrawFromUnderlyingStrategy(
-            IPoolManagerLike(poolManager_).pool(),
-            assets_,
-            data_
-        );
+        IUnderlyingStrategyLike(underlyingStrategy).withdrawFromUnderlyingStrategy(IPoolManagerLike(poolManager_).pool(), assets_, data_);
 
         emit RedemptionProcessed(poolManager_, shares_, assets_);
     }
@@ -310,7 +317,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
 
     function multicall(bytes[] calldata data_) external override {
         for (uint256 i = 0; i < data_.length; i++) {
-            ( bool success_, bytes memory returnData_ ) = address(this).delegatecall(data_[i]);
+            (bool success_, bytes memory returnData_) = address(this).delegatecall(data_[i]);
 
             if (!success_) {
                 assembly ("memory-safe") {
@@ -428,25 +435,22 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
 
         address globals_ = globals();
 
-        isOperator_ =
-            IGlobalsLike(globals_).isInstanceOf("LIQUIDITY_BOT",    msg.sender) ||
-            IGlobalsLike(globals_).isInstanceOf("LIQUIDITY_ROUTER", msg.sender);
+        isOperator_ = IGlobalsLike(globals_).isInstanceOf("LIQUIDITY_BOT", msg.sender)
+            || IGlobalsLike(globals_).isInstanceOf("LIQUIDITY_ROUTER", msg.sender);
     }
 
     function _isValidPoolManager(address poolManager_) internal view returns (bool isValid_) {
         address factory_ = IPoolManagerLike(poolManager_).factory();
 
         isValid_ =
-            IGlobalsLike(globals()).isInstanceOf("POOL_MANAGER_FACTORY", factory_) &&
-            IProxyFactoryLike(factory_).isInstance(poolManager_);
+            IGlobalsLike(globals()).isInstanceOf("POOL_MANAGER_FACTORY", factory_) && IProxyFactoryLike(factory_).isInstance(poolManager_);
     }
 
     function _isValidUnderlyingStrategy(address underlyingStrategy_) internal view returns (bool isValid_) {
         address factory_ = IUnderlyingStrategyLike(underlyingStrategy_).factory();
 
-        isValid_ =
-            IGlobalsLike(globals()).isInstanceOf("UNDERLYING_STRATEGY_FACTORY", factory_) &&
-            IProxyFactoryLike(factory_).isInstance(underlyingStrategy_);
+        isValid_ = IGlobalsLike(globals()).isInstanceOf("UNDERLYING_STRATEGY_FACTORY", factory_)
+            && IProxyFactoryLike(factory_).isInstance(underlyingStrategy_);
     }
 
     function _isWithinPoolManagerCap(address poolManager_) internal view returns (bool withinCap_) {
@@ -455,7 +459,7 @@ contract MapleStrategyManager is IMapleStrategyManager, MapleStrategyManagerStor
         // A cap of the maximum value means the pool manager is completely blocked and can never be within cap.
         // A cap of zero means no cap is set, so it is always considered within cap (unlimited).
         if (poolManagerCap_ == type(uint256).max) return false;
-        if (poolManagerCap_ == 0)                 return true;
+        if (poolManagerCap_ == 0) return true;
 
         withinCap_ = assetsOf(poolManager_) <= poolManagerCap_;
     }

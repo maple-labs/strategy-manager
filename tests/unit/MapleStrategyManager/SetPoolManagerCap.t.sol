@@ -5,11 +5,7 @@ import { IMapleStrategyManager } from "../../../contracts/interfaces/IMapleStrat
 
 import { MapleStrategyManager } from "../../../contracts/MapleStrategyManager.sol";
 
-import {
-    MockGlobals,
-    MockPoolManager,
-    MockPoolManagerFactory
-} from "../../utils/Mocks.sol";
+import { MockGlobals, MockPoolManager, MockPoolManagerFactory } from "../../utils/Mocks.sol";
 
 import { TestBase } from "../../utils/TestBase.sol";
 

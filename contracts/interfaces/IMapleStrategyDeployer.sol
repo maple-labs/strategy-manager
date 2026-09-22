@@ -12,11 +12,7 @@ interface IMapleStrategyDeployer {
      *  @param strategyManager    Address of the deployed strategy manager.
      *  @param underlyingStrategy Address of the deployed underlying strategy.
      */
-    event StrategyManagerDeployed(
-        address indexed strategyDelegate,
-        address indexed strategyManager,
-        address indexed underlyingStrategy
-    );
+    event StrategyManagerDeployed(address indexed strategyDelegate, address indexed strategyManager, address indexed underlyingStrategy);
 
     /**
      *  @dev    Deploys a strategy manager and underlying strategy.
@@ -33,9 +29,11 @@ interface IMapleStrategyDeployer {
         address strategyManagerFactory,
         address strategyFactory,
         uint256 strategyLiquidityCap,
-        bytes   calldata strategyDeploymentData,
-        bytes   calldata bootstrapFundingData
-    ) external returns (address strategyManager, address underlyingStrategy);
+        bytes calldata strategyDeploymentData,
+        bytes calldata bootstrapFundingData
+    )
+        external
+        returns (address strategyManager, address underlyingStrategy);
 
     /**
      *  @dev    Returns the address of the Maple globals contract.
@@ -58,7 +56,8 @@ interface IMapleStrategyDeployer {
         address strategyFactory,
         bytes calldata strategyDeploymentData
     )
-        external view
+        external
+        view
         returns (address strategyManager, address underlyingStrategy);
 
 }

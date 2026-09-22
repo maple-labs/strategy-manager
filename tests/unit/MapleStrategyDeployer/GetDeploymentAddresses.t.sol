@@ -5,11 +5,7 @@ import { MapleStrategyDeployer } from "../../../contracts/MapleStrategyDeployer.
 
 import { TestBase } from "../../utils/TestBase.sol";
 
-import {
-    MockDeployableStrategy,
-    MockDeployableStrategyInitializer,
-    MockStrategyFactory
-} from "../../utils/Mocks.sol";
+import { MockDeployableStrategy, MockDeployableStrategyInitializer, MockStrategyFactory } from "../../utils/Mocks.sol";
 
 contract GetDeploymentAddressesTests is TestBase {
 
@@ -20,11 +16,7 @@ contract GetDeploymentAddressesTests is TestBase {
         strategyDeployer = new MapleStrategyDeployer(globals);
 
         vm.startPrank(governor);
-        strategyFactory.registerImplementation(
-            100,
-            address(new MockDeployableStrategy()),
-            address(new MockDeployableStrategyInitializer())
-        );
+        strategyFactory.registerImplementation(100, address(new MockDeployableStrategy()), address(new MockDeployableStrategyInitializer()));
         strategyFactory.setDefaultVersion(100);
         vm.stopPrank();
     }
@@ -33,20 +25,13 @@ contract GetDeploymentAddressesTests is TestBase {
         bytes32 salt = keccak256(abi.encode(strategyDelegate));
 
         bytes memory strategyManagerDeploymentData = abi.encode(strategyDelegate);
-        address expectedStrategyManager = factory.getInstanceAddress(strategyManagerDeploymentData, salt);
+        address      expectedStrategyManager       = factory.getInstanceAddress(strategyManagerDeploymentData, salt);
 
-        bytes memory strategyDeploymentData = bytes.concat(
-            abi.encode(expectedStrategyManager),
-            abi.encode(false)
-        );
-        address expectedUnderlyingStrategy = strategyFactory.getInstanceAddress(strategyDeploymentData, salt);
+        bytes memory strategyDeploymentData     = bytes.concat(abi.encode(expectedStrategyManager), abi.encode(false));
+        address      expectedUnderlyingStrategy = strategyFactory.getInstanceAddress(strategyDeploymentData, salt);
 
-        ( address strategyManager, address underlyingStrategy ) = strategyDeployer.getDeploymentAddresses(
-            strategyDelegate,
-            address(factory),
-            address(strategyFactory),
-            abi.encode(false)
-        );
+        (address strategyManager, address underlyingStrategy) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, address(factory), address(strategyFactory), abi.encode(false));
 
         assertEq(strategyManager,    expectedStrategyManager);
         assertEq(underlyingStrategy, expectedUnderlyingStrategy);

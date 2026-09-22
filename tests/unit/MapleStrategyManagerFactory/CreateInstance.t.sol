@@ -6,8 +6,8 @@ import { IMapleProxyFactory } from "../../../modules/maple-proxy-factory/contrac
 import { IMapleStrategyManagerInitializer } from "../../../contracts/interfaces/IMapleStrategyManagerInitializer.sol";
 
 import { MapleStrategyManagerHarness } from "../../utils/Harnesses.sol";
-import { MockGlobals }                 from "../../utils/Mocks.sol";
-import { TestBase }                    from "../../utils/TestBase.sol";
+import { MockGlobals } from "../../utils/Mocks.sol";
+import { TestBase } from "../../utils/TestBase.sol";
 
 contract CreateInstanceTests is TestBase {
 
@@ -34,7 +34,7 @@ contract CreateInstanceTests is TestBase {
     }
 
     function test_createInstance_success() external {
-        bytes32 salt           = keccak256("salt");
+        bytes32      salt      = keccak256("salt");
         bytes memory arguments = abi.encode(params);
 
         address expectedInstance = factory.getInstanceAddress(arguments, salt);

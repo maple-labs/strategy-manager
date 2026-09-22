@@ -6,7 +6,7 @@ import { IMapleStrategyManager } from "../../../contracts/interfaces/IMapleStrat
 import { MapleStrategyManager } from "../../../contracts/MapleStrategyManager.sol";
 
 import { MockGlobals, MockStrategy } from "../../utils/Mocks.sol";
-import { TestBase }                  from "../../utils/TestBase.sol";
+import { TestBase } from "../../utils/TestBase.sol";
 
 contract CompleteConfigurationFailureTests is TestBase {
 
@@ -74,10 +74,7 @@ contract CompleteConfigurationSuccessTests is TestBase {
         assertEq(strategyManager.totalShares(),        0);
         assertEq(strategyManager.sharesOf(address(0)), 0);
 
-        vm.expectCall(
-            underlyingStrategy,
-            abi.encodeCall(MockStrategy.fundUnderlyingStrategy, (bootstrapAssets, bootstrapFundingData))
-        );
+        vm.expectCall(underlyingStrategy, abi.encodeCall(MockStrategy.fundUnderlyingStrategy, (bootstrapAssets, bootstrapFundingData)));
 
         vm.expectEmit();
         emit IMapleStrategyManager.StrategyManagerFunded(address(0), bootstrapAssets, bootstrapAssets, bootstrapAssets);

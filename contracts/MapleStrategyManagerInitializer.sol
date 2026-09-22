@@ -2,7 +2,7 @@
 pragma solidity ^0.8.34;
 
 import { IMapleStrategyManagerInitializer } from "./interfaces/IMapleStrategyManagerInitializer.sol";
-import { IGlobalsLike, IProxyFactoryLike }  from "./interfaces/Interfaces.sol";
+import { IGlobalsLike, IProxyFactoryLike } from "./interfaces/Interfaces.sol";
 
 import { MapleStrategyManagerStorage } from "./MapleStrategyManagerStorage.sol";
 

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { IMapleStrategyDeployer } from "../../../contracts/interfaces/IMapleStrategyDeployer.sol";
-import { IMapleStrategyManager }  from "../../../contracts/interfaces/IMapleStrategyManager.sol";
+import { IMapleStrategyManager } from "../../../contracts/interfaces/IMapleStrategyManager.sol";
 
 import { MapleStrategyDeployer } from "../../../contracts/MapleStrategyDeployer.sol";
 
@@ -25,18 +25,14 @@ contract DeployFailureTests is TestBase {
         strategyDeployer = new MapleStrategyDeployer(globals);
 
         vm.startPrank(governor);
-        strategyFactory.registerImplementation(
-            100,
-            address(new MockDeployableStrategy()),
-            address(new MockDeployableStrategyInitializer())
-        );
+        strategyFactory.registerImplementation(100, address(new MockDeployableStrategy()), address(new MockDeployableStrategyInitializer()));
         strategyFactory.setDefaultVersion(100);
         vm.stopPrank();
 
         MockGlobals(globals).__setCanDeploy(address(strategyDeployer), true);
 
         MockGlobals(globals).__setIsInstanceOf("UNDERLYING_STRATEGY_FACTORY", address(strategyFactory), true);
-        MockGlobals(globals).__setIsInstanceOf("STRATEGY_MANAGER_FACTORY",    address(factory),         true);
+        MockGlobals(globals).__setIsInstanceOf("STRATEGY_MANAGER_FACTORY", address(factory), true);
     }
 
     function test_deploy_revert_invalidStrategyDelegate() external {
@@ -111,18 +107,14 @@ contract DeploySuccessTests is TestBase {
         strategyDeployer = new MapleStrategyDeployer(globals);
 
         vm.startPrank(governor);
-        strategyFactory.registerImplementation(
-            100,
-            address(new MockDeployableStrategy()),
-            address(new MockDeployableStrategyInitializer())
-        );
+        strategyFactory.registerImplementation(100, address(new MockDeployableStrategy()), address(new MockDeployableStrategyInitializer()));
         strategyFactory.setDefaultVersion(100);
         vm.stopPrank();
 
         MockGlobals(globals).__setCanDeploy(address(strategyDeployer), true);
 
         MockGlobals(globals).__setIsInstanceOf("UNDERLYING_STRATEGY_FACTORY", address(strategyFactory), true);
-        MockGlobals(globals).__setIsInstanceOf("STRATEGY_MANAGER_FACTORY",    address(factory),         true);
+        MockGlobals(globals).__setIsInstanceOf("STRATEGY_MANAGER_FACTORY", address(factory), true);
     }
 
     function test_deploy_success() external {
@@ -136,12 +128,8 @@ contract DeploySuccessTests is TestBase {
         strategyFactory.__setFundsAsset(address(asset));
         MockERC20(asset).__mint(strategyDelegate, bootstrapAssets);
 
-        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) = strategyDeployer.getDeploymentAddresses(
-            strategyDelegate,
-            address(factory),
-            address(strategyFactory),
-            strategyDeploymentData_
-        );
+        (address expectedStrategyManager, address expectedUnderlyingStrategy) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, address(factory), address(strategyFactory), strategyDeploymentData_);
 
         assertEq(MockERC20(asset).balanceOf(strategyDelegate),           bootstrapAssets);
         assertEq(MockERC20(asset).balanceOf(expectedUnderlyingStrategy), 0);
@@ -152,19 +140,11 @@ contract DeploySuccessTests is TestBase {
         );
 
         vm.expectEmit();
-        emit IMapleStrategyDeployer.StrategyManagerDeployed(
-            strategyDelegate,
-            expectedStrategyManager,
-            expectedUnderlyingStrategy
-        );
+        emit IMapleStrategyDeployer.StrategyManagerDeployed(strategyDelegate, expectedStrategyManager, expectedUnderlyingStrategy);
 
         vm.prank(strategyDelegate);
-        ( address strategyManager, address underlyingStrategy ) = strategyDeployer.deploy(
-            address(factory),
-            address(strategyFactory),
-            strategyLiquidityCap,
-            strategyDeploymentData_,
-            bootstrapFundingData_
+        (address strategyManager, address underlyingStrategy) = strategyDeployer.deploy(
+            address(factory), address(strategyFactory), strategyLiquidityCap, strategyDeploymentData_, bootstrapFundingData_
         );
 
         assertEq(strategyManager,    expectedStrategyManager);
@@ -190,22 +170,14 @@ contract DeploySuccessTests is TestBase {
     function test_deploy_success_zeroBootstrap() external {
         bytes memory strategyDeploymentData_ = abi.encode(false);
 
-        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) = strategyDeployer.getDeploymentAddresses(
-            strategyDelegate,
-            address(factory),
-            address(strategyFactory),
-            strategyDeploymentData_
-        );
+        (address expectedStrategyManager, address expectedUnderlyingStrategy) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, address(factory), address(strategyFactory), strategyDeploymentData_);
 
         vm.expectEmit();
-        emit IMapleStrategyDeployer.StrategyManagerDeployed(
-            strategyDelegate,
-            expectedStrategyManager,
-            expectedUnderlyingStrategy
-        );
+        emit IMapleStrategyDeployer.StrategyManagerDeployed(strategyDelegate, expectedStrategyManager, expectedUnderlyingStrategy);
 
         vm.prank(strategyDelegate);
-        ( address strategyManager, address underlyingStrategy ) =
+        (address strategyManager, address underlyingStrategy) =
             strategyDeployer.deploy(address(factory), address(strategyFactory), 0, strategyDeploymentData_, "");
 
         assertEq(strategyManager,    expectedStrategyManager);
@@ -228,22 +200,14 @@ contract DeploySuccessTests is TestBase {
     function test_deploy_success_zeroLiquidityCap_leftUnset() external {
         bytes memory strategyDeploymentData_ = abi.encode(false);
 
-        ( address expectedStrategyManager, address expectedUnderlyingStrategy ) = strategyDeployer.getDeploymentAddresses(
-            strategyDelegate,
-            address(factory),
-            address(strategyFactory),
-            strategyDeploymentData_
-        );
+        (address expectedStrategyManager, address expectedUnderlyingStrategy) =
+            strategyDeployer.getDeploymentAddresses(strategyDelegate, address(factory), address(strategyFactory), strategyDeploymentData_);
 
         // A zero cap is left unset, so setStrategyLiquidityCap is never called during deployment.
-        vm.expectCall(
-            expectedStrategyManager,
-            abi.encodeCall(IMapleStrategyManager.setStrategyLiquidityCap, (0)),
-            0
-        );
+        vm.expectCall(expectedStrategyManager, abi.encodeCall(IMapleStrategyManager.setStrategyLiquidityCap, (0)), 0);
 
         vm.prank(strategyDelegate);
-        ( address strategyManager, address underlyingStrategy ) =
+        (address strategyManager, address underlyingStrategy) =
             strategyDeployer.deploy(address(factory), address(strategyFactory), 0, strategyDeploymentData_, "");
 
         assertEq(strategyManager,    expectedStrategyManager);

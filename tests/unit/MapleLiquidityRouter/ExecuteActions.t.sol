@@ -5,19 +5,14 @@ import { Action, ActionType, IMapleLiquidityRouter } from "../../../contracts/in
 
 import { MapleLiquidityRouter } from "../../../contracts/MapleLiquidityRouter.sol";
 
-import {
-    MockGlobals,
-    MockReentrantStrategyManager,
-    MockStrategyManager,
-    MockStrategyManagerFactory
-} from "../../utils/Mocks.sol";
+import { MockGlobals, MockReentrantStrategyManager, MockStrategyManager, MockStrategyManagerFactory } from "../../utils/Mocks.sol";
 
 import { TestBase } from "../../utils/TestBase.sol";
 
 contract ExecuteActionsTestBase is TestBase {
 
-    MapleLiquidityRouter       router;
-    MockStrategyManager        mockStrategyManager;
+    MapleLiquidityRouter router;
+    MockStrategyManager mockStrategyManager;
     MockStrategyManagerFactory mockStrategyManagerFactory;
 
     function setUp() public override {
@@ -31,8 +26,8 @@ contract ExecuteActionsTestBase is TestBase {
         mockStrategyManager.__setFactory(address(mockStrategyManagerFactory));
         mockStrategyManagerFactory.__setIsInstance(address(mockStrategyManager), true);
 
-        MockGlobals(globals).__setIsInstanceOf("LIQUIDITY_ROUTER_BOT",     liquidityBot,                        true);
-        MockGlobals(globals).__setIsInstanceOf("LIQUIDITY_ROUTER",         address(router),                     true);
+        MockGlobals(globals).__setIsInstanceOf("LIQUIDITY_ROUTER_BOT", liquidityBot, true);
+        MockGlobals(globals).__setIsInstanceOf("LIQUIDITY_ROUTER", address(router), true);
         MockGlobals(globals).__setIsInstanceOf("STRATEGY_MANAGER_FACTORY", address(mockStrategyManagerFactory), true);
     }
 
@@ -41,8 +36,14 @@ contract ExecuteActionsTestBase is TestBase {
         mockStrategyManager.__setTotalShares(totalShares_);
     }
 
-    function _cancelRedemptionAction(address strategyManager_, address poolManager_, uint256 shares_)
-        internal pure returns (Action memory action_)
+    function _cancelRedemptionAction(
+        address strategyManager_,
+        address poolManager_,
+        uint256 shares_
+    )
+        internal
+        pure
+        returns (Action memory action_)
     {
         action_ = Action({
             actionType:      ActionType.CANCEL_REDEMPTION,
@@ -53,8 +54,15 @@ contract ExecuteActionsTestBase is TestBase {
         });
     }
 
-    function _fundStrategyAction(address strategyManager_, address poolManager_, uint256 assets_, bytes memory strategyData_)
-        internal pure returns (Action memory action_)
+    function _fundStrategyAction(
+        address strategyManager_,
+        address poolManager_,
+        uint256 assets_,
+        bytes memory strategyData_
+    )
+        internal
+        pure
+        returns (Action memory action_)
     {
         action_ = Action({
             actionType:      ActionType.FUND_STRATEGY,
@@ -65,8 +73,15 @@ contract ExecuteActionsTestBase is TestBase {
         });
     }
 
-    function _processRedemptionAction(address strategyManager_, address poolManager_, uint256 shares_, bytes memory strategyData_)
-        internal pure returns (Action memory action_)
+    function _processRedemptionAction(
+        address strategyManager_,
+        address poolManager_,
+        uint256 shares_,
+        bytes memory strategyData_
+    )
+        internal
+        pure
+        returns (Action memory action_)
     {
         action_ = Action({
             actionType:      ActionType.PROCESS_REDEMPTION,
@@ -77,8 +92,14 @@ contract ExecuteActionsTestBase is TestBase {
         });
     }
 
-    function _requestRedeemAction(address strategyManager_, address poolManager_, uint256 shares_)
-        internal pure returns (Action memory action_)
+    function _requestRedeemAction(
+        address strategyManager_,
+        address poolManager_,
+        uint256 shares_
+    )
+        internal
+        pure
+        returns (Action memory action_)
     {
         action_ = Action({
             actionType:      ActionType.REQUEST_REDEEM,
@@ -202,7 +223,7 @@ contract ExecuteActionsFailureTests is ExecuteActionsTestBase {
         Action[] memory actions = new Action[](2);
 
         actions[0] = _fundStrategyAction(address(mockStrategyManager), poolManager, 1, "");
-        actions[1] = _fundStrategyAction(address(0),                   poolManager, 1, "");
+        actions[1] = _fundStrategyAction(address(0), poolManager, 1, "");
 
         vm.prank(liquidityBot);
         vm.expectRevert("MLR:EA:ZERO_SM");
@@ -221,13 +242,7 @@ contract ExecuteActionsSuccessTests is ExecuteActionsTestBase {
         actions[0] = _fundStrategyAction(address(mockStrategyManager), poolManager, assets, "strategyData");
 
         vm.expectEmit(address(router));
-        emit IMapleLiquidityRouter.ActionExecuted(
-            0,
-            ActionType.FUND_STRATEGY,
-            address(mockStrategyManager),
-            poolManager,
-            assets
-        );
+        emit IMapleLiquidityRouter.ActionExecuted(0, ActionType.FUND_STRATEGY, address(mockStrategyManager), poolManager, assets);
 
         vm.prank(liquidityBot);
         router.executeActions(actions, block.timestamp);
@@ -248,22 +263,10 @@ contract ExecuteActionsSuccessTests is ExecuteActionsTestBase {
         actions[2] = _processRedemptionAction(address(mockStrategyManager), poolManager, sharesToRedeem, "strategyData");
 
         vm.expectEmit(address(router));
-        emit IMapleLiquidityRouter.ActionExecuted(
-            0,
-            ActionType.FUND_STRATEGY,
-            address(mockStrategyManager),
-            poolManager,
-            assetsToFund
-        );
+        emit IMapleLiquidityRouter.ActionExecuted(0, ActionType.FUND_STRATEGY, address(mockStrategyManager), poolManager, assetsToFund);
 
         vm.expectEmit(address(router));
-        emit IMapleLiquidityRouter.ActionExecuted(
-            1,
-            ActionType.REQUEST_REDEEM,
-            address(mockStrategyManager),
-            poolManager,
-            sharesToRedeem
-        );
+        emit IMapleLiquidityRouter.ActionExecuted(1, ActionType.REQUEST_REDEEM, address(mockStrategyManager), poolManager, sharesToRedeem);
 
         vm.expectEmit(address(router));
         emit IMapleLiquidityRouter.ActionExecuted(
@@ -306,13 +309,7 @@ contract ExecuteActionsSuccessTests is ExecuteActionsTestBase {
         actions[2] = _processRedemptionAction(address(mockStrategyManager), poolManager, sharesProcessed, "strategyData");
 
         vm.expectEmit(address(router));
-        emit IMapleLiquidityRouter.ActionExecuted(
-            0,
-            ActionType.REQUEST_REDEEM,
-            address(mockStrategyManager),
-            poolManager,
-            sharesRequested
-        );
+        emit IMapleLiquidityRouter.ActionExecuted(0, ActionType.REQUEST_REDEEM, address(mockStrategyManager), poolManager, sharesRequested);
 
         vm.expectEmit(address(router));
         emit IMapleLiquidityRouter.ActionExecuted(

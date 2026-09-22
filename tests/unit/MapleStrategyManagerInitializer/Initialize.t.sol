@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import { IMapleStrategyManagerInitializer } from "../../../contracts/interfaces/IMapleStrategyManagerInitializer.sol";
 
 import { MapleStrategyManagerInitializerHarness } from "../../utils/Harnesses.sol";
-import { TestBase }                               from "../../utils/TestBase.sol";
+import { TestBase } from "../../utils/TestBase.sol";
 
 contract InitializeTests is TestBase {
 

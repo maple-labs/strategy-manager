@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.34;
 
-import {
-    Action,
-    ActionType,
-    IMapleLiquidityRouter
-} from "./interfaces/IMapleLiquidityRouter.sol";
+import { Action, ActionType, IMapleLiquidityRouter } from "./interfaces/IMapleLiquidityRouter.sol";
 
 import { IGlobalsLike, IProxyFactoryLike, IStrategyManagerLike } from "./interfaces/Interfaces.sol";
 
@@ -35,7 +31,7 @@ contract MapleLiquidityRouter is IMapleLiquidityRouter {
 
     address public immutable override globals;
 
-    uint256 internal _locked;  // Used when checking for reentrancy.
+    uint256 internal _locked; // Used when checking for reentrancy.
 
     /**************************************************************************************************************************************/
     /*** Modifiers                                                                                                                      ***/
@@ -90,7 +86,7 @@ contract MapleLiquidityRouter is IMapleLiquidityRouter {
             uint256    amount_          = action_.amount;
 
             require(strategyManager_ != address(0), "MLR:EA:ZERO_SM");
-            require(poolManager_     != address(0), "MLR:EA:ZERO_PM");
+            require(poolManager_ != address(0),     "MLR:EA:ZERO_PM");
 
             IStrategyManagerLike strategyManagerContract_ = IStrategyManagerLike(strategyManager_);
             address              strategyManagerFactory_  = strategyManagerContract_.factory();

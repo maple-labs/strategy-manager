@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import { MapleStrategyManager } from "../../../contracts/MapleStrategyManager.sol";
 
 import { MockGlobals, MockMigrator } from "../../utils/Mocks.sol";
-import { TestBase }                  from "../../utils/TestBase.sol";
+import { TestBase } from "../../utils/TestBase.sol";
 
 contract MigrateTests is TestBase {
 

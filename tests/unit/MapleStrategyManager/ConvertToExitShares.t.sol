@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import { stdError } from "../../../modules/forge-std/src/StdError.sol";
 
 import { MockStrategy } from "../../utils/Mocks.sol";
-import { TestBase }     from "../../utils/TestBase.sol";
+import { TestBase } from "../../utils/TestBase.sol";
 
 contract ConvertToExitSharesTests is TestBase {
 

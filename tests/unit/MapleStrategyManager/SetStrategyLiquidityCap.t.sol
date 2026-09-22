@@ -6,7 +6,7 @@ import { IMapleStrategyManager } from "../../../contracts/interfaces/IMapleStrat
 import { MapleStrategyManager } from "../../../contracts/MapleStrategyManager.sol";
 
 import { MockGlobals } from "../../utils/Mocks.sol";
-import { TestBase }    from "../../utils/TestBase.sol";
+import { TestBase } from "../../utils/TestBase.sol";
 
 contract SetStrategyLiquidityCapFailureTests is TestBase {
 

@@ -25,10 +25,10 @@ enum ActionType {
  */
 struct Action {
     ActionType actionType;
-    address    strategyManager;
-    address    poolManager;
-    uint256    amount;
-    bytes      strategyData;
+    address strategyManager;
+    address poolManager;
+    uint256 amount;
+    bytes strategyData;
 }
 
 /**
@@ -49,11 +49,11 @@ interface IMapleLiquidityRouter {
      *  @param amount          Assets for funding and shares for redemption actions.
      */
     event ActionExecuted(
-        uint256            actionIndex,
+        uint256 actionIndex,
         ActionType indexed actionType,
-        address    indexed strategyManager,
-        address    indexed poolManager,
-        uint256            amount
+        address indexed strategyManager,
+        address indexed poolManager,
+        uint256 amount
     );
 
     /**************************************************************************************************************************************/

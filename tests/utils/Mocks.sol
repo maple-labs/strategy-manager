@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 
 import { MapleProxiedInternals } from "../../modules/maple-proxy-factory/contracts/MapleProxiedInternals.sol";
-import { MapleProxyFactory }     from "../../modules/maple-proxy-factory/contracts/MapleProxyFactory.sol";
+import { MapleProxyFactory } from "../../modules/maple-proxy-factory/contracts/MapleProxyFactory.sol";
 
 import { Action, IMapleLiquidityRouter } from "../../contracts/interfaces/IMapleLiquidityRouter.sol";
-import { IGlobalsLike }                  from "../../contracts/interfaces/Interfaces.sol";
+import { IGlobalsLike } from "../../contracts/interfaces/Interfaces.sol";
 
 import { MapleStrategyManagerStorage } from "../../contracts/MapleStrategyManagerStorage.sol";
 
@@ -96,7 +96,7 @@ contract MockPoolManager {
     address public pool;
     address public poolDelegate;
 
-    function requestFunds(address, uint256) external {}
+    function requestFunds(address, uint256) external { }
 
     function __setFactory(address factory_) external {
         factory = factory_;
@@ -206,7 +206,7 @@ contract MockStrategyFactory is MapleProxyFactory {
     address public fundsAsset;
     address public invalidInstance;
 
-    constructor(address globals_) MapleProxyFactory(globals_) {}
+    constructor(address globals_) MapleProxyFactory(globals_) { }
 
     function __setFundsAsset(address fundsAsset_) external {
         fundsAsset = fundsAsset_;

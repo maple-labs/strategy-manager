@@ -82,12 +82,7 @@ interface IMapleStrategyManager is IMapleStrategyManagerStorage, IMapleProxied {
      *  @param assetsDeposited Amount of assets deposited into the underlying strategy.
      *  @param sharesMinted    Number of shares credited to the pool manager.
      */
-    event StrategyManagerFunded(
-        address indexed poolManager,
-        uint256 assetsIn,
-        uint256 assetsDeposited,
-        uint256 sharesMinted
-    );
+    event StrategyManagerFunded(address indexed poolManager, uint256 assetsIn, uint256 assetsDeposited, uint256 sharesMinted);
 
     /**
      *  @dev   Emitted when the underlying strategy is set.

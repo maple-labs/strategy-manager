@@ -2,17 +2,11 @@
 pragma solidity ^0.8.0;
 
 import { IUnderlyingStrategyLike } from "../../../contracts/interfaces/Interfaces.sol";
-import { IMapleStrategyManager }   from "../../../contracts/interfaces/IMapleStrategyManager.sol";
+import { IMapleStrategyManager } from "../../../contracts/interfaces/IMapleStrategyManager.sol";
 
 import { MapleStrategyManager } from "../../../contracts/MapleStrategyManager.sol";
 
-import {
-    MockERC20,
-    MockGlobals,
-    MockPoolManager,
-    MockPoolManagerFactory,
-    MockStrategy
-} from "../../utils/Mocks.sol";
+import { MockERC20, MockGlobals, MockPoolManager, MockPoolManagerFactory, MockStrategy } from "../../utils/Mocks.sol";
 
 import { TestBase } from "../../utils/TestBase.sol";
 
@@ -683,7 +677,7 @@ contract ProcessRedemptionSuccessTests is TestBase {
         /**********************************************************************************************************************************/
 
         uint256 sharesProcessed = 1;
-        uint256 assetsExpected  = 33;  // 1 * 100 / 3 = 33.33..., rounds down to 33.
+        uint256 assetsExpected  = 33; // 1 * 100 / 3 = 33.33..., rounds down to 33.
 
         vm.expectCall(underlyingStrategy, abi.encodeCall(MockStrategy.withdrawFromUnderlyingStrategy, (pool, assetsExpected, "")));
 
@@ -752,7 +746,7 @@ contract ProcessRedemptionSuccessTests is TestBase {
         /*** Step 2: Process redemption at exit rate                                                                                    ***/
         /**********************************************************************************************************************************/
 
-        uint256 assetsExpected = 40;  // 5 shares redeem against 80 exit assets with 10 total shares.
+        uint256 assetsExpected = 40; // 5 shares redeem against 80 exit assets with 10 total shares.
 
         vm.expectCall(underlyingStrategy, abi.encodeCall(MockStrategy.withdrawFromUnderlyingStrategy, (pool, assetsExpected, "")));
 
@@ -1330,16 +1324,16 @@ contract ProcessRedemptionSuccessTests is TestBase {
         vm.prank(liquidityBot);
         strategyManager.processRedemption(poolManager2, pm2SharesProcessed, "");
 
-        assertEq(strategyManager.assetsUnderManagement(), totalAum          - pm2AssetsReceived);
-        assertEq(strategyManager.totalShares(),           totalShares       - pm2SharesProcessed);
+        assertEq(strategyManager.assetsUnderManagement(), totalAum - pm2AssetsReceived);
+        assertEq(strategyManager.totalShares(),           totalShares - pm2SharesProcessed);
         assertEq(strategyManager.totalPendingShares(),    pm1InitialRequest + pm2InitialRequest - pm2SharesProcessed);
 
         assertEq(strategyManager.sharesOf(poolManager1),        pm1InitialShares);
         assertEq(strategyManager.assetsOf(poolManager1),        pm1InitialAssets);
         assertEq(strategyManager.pendingSharesOf(poolManager1), pm1InitialRequest);
 
-        assertEq(strategyManager.sharesOf(poolManager2),        pm2InitialShares  - pm2SharesProcessed);
-        assertEq(strategyManager.assetsOf(poolManager2),        pm2InitialAssets  - pm2AssetsReceived);
+        assertEq(strategyManager.sharesOf(poolManager2),        pm2InitialShares - pm2SharesProcessed);
+        assertEq(strategyManager.assetsOf(poolManager2),        pm2InitialAssets - pm2AssetsReceived);
         assertEq(strategyManager.pendingSharesOf(poolManager2), pm2InitialRequest - pm2SharesProcessed);
 
         assertEq(MockERC20(asset).balanceOf(pool1), 0);
@@ -1354,20 +1348,17 @@ contract ProcessRedemptionSuccessTests is TestBase {
         vm.prank(liquidityBot);
         strategyManager.requestRedeem(poolManager1, pm1AdditionalRequest);
 
-        assertEq(strategyManager.assetsUnderManagement(), totalAum    - pm2AssetsReceived);
+        assertEq(strategyManager.assetsUnderManagement(), totalAum - pm2AssetsReceived);
         assertEq(strategyManager.totalShares(),           totalShares - pm2SharesProcessed);
 
-        assertEq(
-            strategyManager.totalPendingShares(),
-            pm1InitialRequest + pm2InitialRequest - pm2SharesProcessed + pm1AdditionalRequest
-        );
+        assertEq(strategyManager.totalPendingShares(), pm1InitialRequest + pm2InitialRequest - pm2SharesProcessed + pm1AdditionalRequest);
 
         assertEq(strategyManager.sharesOf(poolManager1),        pm1InitialShares);
         assertEq(strategyManager.assetsOf(poolManager1),        pm1InitialAssets);
         assertEq(strategyManager.pendingSharesOf(poolManager1), pm1InitialRequest + pm1AdditionalRequest);
 
-        assertEq(strategyManager.sharesOf(poolManager2),        pm2InitialShares  - pm2SharesProcessed);
-        assertEq(strategyManager.assetsOf(poolManager2),        pm2InitialAssets  - pm2AssetsReceived);
+        assertEq(strategyManager.sharesOf(poolManager2),        pm2InitialShares - pm2SharesProcessed);
+        assertEq(strategyManager.assetsOf(poolManager2),        pm2InitialAssets - pm2AssetsReceived);
         assertEq(strategyManager.pendingSharesOf(poolManager2), pm2InitialRequest - pm2SharesProcessed);
 
         /**********************************************************************************************************************************/
@@ -1379,7 +1370,7 @@ contract ProcessRedemptionSuccessTests is TestBase {
         vm.prank(liquidityBot);
         strategyManager.requestRedeem(poolManager2, pm2AdditionalRequest);
 
-        assertEq(strategyManager.assetsUnderManagement(), totalAum    - pm2AssetsReceived);
+        assertEq(strategyManager.assetsUnderManagement(), totalAum - pm2AssetsReceived);
         assertEq(strategyManager.totalShares(),           totalShares - pm2SharesProcessed);
 
         assertEq(
@@ -1391,8 +1382,8 @@ contract ProcessRedemptionSuccessTests is TestBase {
         assertEq(strategyManager.assetsOf(poolManager1),        pm1InitialAssets);
         assertEq(strategyManager.pendingSharesOf(poolManager1), pm1InitialRequest + pm1AdditionalRequest);
 
-        assertEq(strategyManager.sharesOf(poolManager2),        pm2InitialShares  - pm2SharesProcessed);
-        assertEq(strategyManager.assetsOf(poolManager2),        pm2InitialAssets  - pm2AssetsReceived);
+        assertEq(strategyManager.sharesOf(poolManager2),        pm2InitialShares - pm2SharesProcessed);
+        assertEq(strategyManager.assetsOf(poolManager2),        pm2InitialAssets - pm2AssetsReceived);
         assertEq(strategyManager.pendingSharesOf(poolManager2), pm2InitialRequest - pm2SharesProcessed + pm2AdditionalRequest);
 
         /**********************************************************************************************************************************/
@@ -1402,16 +1393,16 @@ contract ProcessRedemptionSuccessTests is TestBase {
         vm.prank(liquidityBot);
         strategyManager.processRedemption(poolManager1, pm1InitialRequest + pm1AdditionalRequest, "");
 
-        assertEq(strategyManager.assetsUnderManagement(), pm2InitialAssets  - pm2AssetsReceived);
-        assertEq(strategyManager.totalShares(),           pm2InitialShares  - pm2SharesProcessed);
+        assertEq(strategyManager.assetsUnderManagement(), pm2InitialAssets - pm2AssetsReceived);
+        assertEq(strategyManager.totalShares(),           pm2InitialShares - pm2SharesProcessed);
         assertEq(strategyManager.totalPendingShares(),    pm2InitialRequest - pm2SharesProcessed + pm2AdditionalRequest);
 
         assertEq(strategyManager.sharesOf(poolManager1),        0);
         assertEq(strategyManager.assetsOf(poolManager1),        0);
         assertEq(strategyManager.pendingSharesOf(poolManager1), 0);
 
-        assertEq(strategyManager.sharesOf(poolManager2),        pm2InitialShares  - pm2SharesProcessed);
-        assertEq(strategyManager.assetsOf(poolManager2),        pm2InitialAssets  - pm2AssetsReceived);
+        assertEq(strategyManager.sharesOf(poolManager2),        pm2InitialShares - pm2SharesProcessed);
+        assertEq(strategyManager.assetsOf(poolManager2),        pm2InitialAssets - pm2AssetsReceived);
         assertEq(strategyManager.pendingSharesOf(poolManager2), pm2InitialRequest - pm2SharesProcessed + pm2AdditionalRequest);
 
         assertEq(MockERC20(asset).balanceOf(pool1), pm1InitialAssets);

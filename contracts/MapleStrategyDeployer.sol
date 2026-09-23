@@ -121,4 +121,4 @@ contract MapleStrategyDeployer is IMapleStrategyDeployer {
         underlyingStrategy_ = IMapleProxyFactory(strategyFactory_).getInstanceAddress(fullStrategyDeploymentData_, salt_);
     }
 
-    }
+}

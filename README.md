@@ -1,9 +1,9 @@
 # Maple Strategy Manager
 
-[![CI](https://github.com/maple-labs/strategy-manager-private/actions/workflows/ci.yaml/badge.svg)](https://github.com/maple-labs/strategy-manager-private/actions/workflows/ci.yaml)
+[![CI](https://github.com/maple-labs/strategy-manager/actions/workflows/ci.yaml/badge.svg)](https://github.com/maple-labs/strategy-manager/actions/workflows/ci.yaml)
 [![GitBook - Documentation](https://img.shields.io/badge/GitBook-Documentation-orange?logo=gitbook&logoColor=white)](https://maplefinance.gitbook.io/maple)
 [![Foundry](https://img.shields.io/badge/Built%20with-Foundry-FFDB1C.svg)](https://getfoundry.sh/)
-[![License: BUSL 1.1](https://img.shields.io/badge/License-BUSL%201.1-blue.svg)](https://github.com/maple-labs/strategy-manager-private/blob/main/LICENSE)
+[![License: BUSL 1.1](https://img.shields.io/badge/License-BUSL%201.1-blue.svg)](https://github.com/maple-labs/strategy-manager/blob/main/LICENSE)
 
 ## Overview
 
@@ -14,8 +14,8 @@ This repository contains the Maple strategy manager contract.
 This project was built using [Foundry](https://book.getfoundry.sh/). Refer to installation instructions [here](https://github.com/foundry-rs/foundry#installation).
 
 ```sh
-git clone git@github.com:maple-labs/strategy-manager-private.git
-cd strategy-manager-private
+git clone git@github.com:maple-labs/strategy-manager.git
+cd strategy-manager
 forge install
 ```
 
